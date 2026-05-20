@@ -76,9 +76,8 @@ export default function GalleryGrid({ albums }: Props) {
                 key={img.id}
                 className="break-inside-avoid cursor-pointer group rounded-xl overflow-hidden relative"
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: (i % 8) * 0.05 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (i % 8) * 0.05, duration: 0.4 }}
                 onClick={() => openLightbox(i)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -9,6 +9,40 @@ import type {
   WhyChooseFeature, AdmissionStep, ApplicationStatus
 } from '@/types'
 
+// ─── Storage Actions ─────────────────────────────────────────────
+export async function uploadImageServer(formData: FormData, bucket: string, folder: string) {
+  const file = formData.get('file') as File
+  if (!file) throw new Error('No file provided')
+
+  const supabase = createAdminClient()
+  const ext = file.name.split('.').pop()
+  const fileName = `${folder ? folder + '/' : ''}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+  // Convert Next.js File to Buffer for Supabase
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  const { error } = await supabase.storage.from(bucket).upload(fileName, buffer, {
+    contentType: file.type,
+    cacheControl: '3600',
+    upsert: false,
+  })
+  if (error) {
+    console.error('Supabase upload error:', error)
+    throw error
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
+  return data.publicUrl
+}
+
+export async function deleteImageServer(url: string, bucket: string) {
+  const supabase = createAdminClient()
+  const path = url.split(`/${bucket}/`)[1]
+  if (!path) return
+  await supabase.storage.from(bucket).remove([path])
+}
+
 // ─── Site Settings ───────────────────────────────────────────────
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   const supabase = await createClient()

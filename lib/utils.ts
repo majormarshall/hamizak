@@ -13,32 +13,20 @@ export function formatDate(date: string | Date, pattern = 'dd MMM yyyy') {
 }
 
 // ─── Supabase Storage upload ─────────────────────────────────────
-import { createClient } from './supabase/client'
+import { uploadImageServer, deleteImageServer } from './actions'
 
 export async function uploadImage(
   file: File,
   bucket: string,
   folder = ''
 ): Promise<string> {
-  const supabase = createClient()
-  const ext = file.name.split('.').pop()
-  const fileName = `${folder ? folder + '/' : ''}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-
-  const { error } = await supabase.storage.from(bucket).upload(fileName, file, {
-    cacheControl: '3600',
-    upsert: false,
-  })
-  if (error) throw error
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
-  return data.publicUrl
+  const formData = new FormData()
+  formData.append('file', file)
+  return uploadImageServer(formData, bucket, folder)
 }
 
 export async function deleteImage(url: string, bucket: string) {
-  const supabase = createClient()
-  const path = url.split(`/${bucket}/`)[1]
-  if (!path) return
-  await supabase.storage.from(bucket).remove([path])
+  return deleteImageServer(url, bucket)
 }
 
 // ─── Slugify ─────────────────────────────────────────────────────
