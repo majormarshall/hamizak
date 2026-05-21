@@ -1,4 +1,4 @@
-# 🌳 Hamizak Montessori Academy — Official Website
+z# 🌳 Hamizak Montessori Academy — Official Website
 
 A complete, production-ready school website with full Admin CMS built with **Next.js 14**, **Tailwind CSS**, and **Supabase**.
 
