@@ -73,7 +73,7 @@ export default function Footer({ settings }: { settings: SiteSettings | null }) 
               </div>
             </div>
             <p className="text-white/40 text-sm leading-relaxed font-medium max-w-sm">
-              Nurturing independent learners and confident children since 2010. Where every child blooms through discipline, integrity, and excellence.
+              Nurturing independent learners and confident children since September 9, 2016. Where every child blooms through discipline, integrity, and excellence.
             </p>
             {socials.length > 0 && (
               <div className="flex gap-3 pt-2">

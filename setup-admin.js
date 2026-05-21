@@ -6,8 +6,8 @@ const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function setupAdmin() {
-  const email = 'kalibest10@gmail.com';
-  const password = 'airborne';
+  const email = 'hussainyusuf393@gmail.com';
+  const password = 'YusufHussain';
 
   console.log(`Setting up admin: ${email}`);
 

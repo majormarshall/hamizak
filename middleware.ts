@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
       .eq('email', user.email)
       .single()
 
-    if (!isAdmin && user.email !== 'alaminoseni22@gmail.com') {
+    if (!isAdmin && user.email !== 'alaminoseni22@gmail.com' && user.email !== 'hussainyusuf393@gmail.com') {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('error', 'unauthorized')
