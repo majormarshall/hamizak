@@ -17,6 +17,21 @@ const schoolImages = [
   { src: '/images/montessori-materials.jpg', label: 'Montessori Practical Learning' },
 ]
 
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? '100%' : '-100%',
+    opacity: 0
+  }),
+  center: {
+    x: 0,
+    opacity: 1
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? '100%' : '-100%',
+    opacity: 0
+  })
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   show:   { opacity: 1, y: 0 },
@@ -33,22 +48,22 @@ export default function HeroSection({ settings }: Props) {
   const headline = settings?.hero_headline ?? "Nurturing Independent Learners for a Bright Future"
   const subtitle  = settings?.hero_subtitle  ?? "Welcome to Hamizak Montessori Academy — Where Every Child Blooms"
 
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [[page, direction], setPage] = useState([0, 0])
+  const currentIndex = ((page % schoolImages.length) + schoolImages.length) % schoolImages.length
+
+  const paginate = (newDirection: number) => {
+    setPage([page + newDirection, newDirection])
+  }
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % schoolImages.length)
+      paginate(1)
     }, 4500)
     return () => clearInterval(timer)
-  }, [])
+  }, [page])
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % schoolImages.length)
-  }
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + schoolImages.length) % schoolImages.length)
-  }
+  const handleNext = () => paginate(1)
+  const handlePrev = () => paginate(-1)
 
   return (
     <section 
@@ -164,13 +179,18 @@ export default function HeroSection({ settings }: Props) {
         >
           <div className="relative p-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-[32px] shadow-2xl">
             <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-900 group">
-              <AnimatePresence mode="wait">
+              <AnimatePresence initial={false} custom={direction}>
                 <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
+                  key={page}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: 'spring', stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
                   className="absolute inset-0 w-full h-full"
                 >
                   <Image
@@ -188,21 +208,21 @@ export default function HeroSection({ settings }: Props) {
               {/* Navigation Arrows */}
               <button
                 onClick={handlePrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/40 hover:bg-teal-500/80 text-white backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 duration-300"
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/40 hover:bg-teal-500/80 text-white backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 duration-300 z-10"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={handleNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/40 hover:bg-teal-500/80 text-white backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 duration-300"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-950/40 hover:bg-teal-500/80 text-white backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 duration-300 z-10"
                 aria-label="Next image"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
 
               {/* Floating Caption / Label */}
-              <div className="absolute bottom-4 left-6 right-6">
+              <div className="absolute bottom-4 left-6 right-6 z-10">
                 <span className="inline-block bg-teal-500/80 backdrop-blur-sm text-[10px] font-black text-white px-3 py-1 rounded-full uppercase tracking-wider mb-2">
                   School Facility
                 </span>
@@ -217,7 +237,12 @@ export default function HeroSection({ settings }: Props) {
               {schoolImages.map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentIndex(index)}
+                  onClick={() => {
+                    const diff = index - currentIndex
+                    if (diff !== 0) {
+                      paginate(diff)
+                    }
+                  }}
                   className={`h-2.5 rounded-full transition-all duration-300 ${
                     index === currentIndex ? 'w-6 bg-teal-400' : 'w-2.5 bg-white/20 hover:bg-white/40'
                   }`}
