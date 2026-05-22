@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Download, Send } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { submitApplication } from '@/lib/actions'
+import { submitApplication, getPrograms } from '@/lib/actions'
 import Link from 'next/link'
 
 const STEPS = ['Child Details', 'Parent Info', 'Program & Notes', 'Review']
-const PROGRAMS = ['Toddler Community (18mo – 3yrs)', "Children's House (3 – 6yrs)", 'Elementary (6 – 12yrs)']
 const HOW_HEARD = ['Word of mouth', 'Google search', 'Social media', 'Friend / family', 'Flyer / poster', 'Other']
 
 const INITIAL = {
@@ -22,6 +21,27 @@ export default function AdmissionPage() {
   const [form, setForm]     = useState(INITIAL)
   const [done, setDone]     = useState(false)
   const [loading, setLoading] = useState(false)
+  const [programs, setPrograms] = useState<string[]>([
+    'Toddler Community (18mo – 3yrs)',
+    "Children's House (3 – 6yrs)",
+    'Elementary (6 – 12yrs)',
+    'High School (12 – 18yrs)'
+  ])
+
+  useEffect(() => {
+    async function loadPrograms() {
+      try {
+        const list = await getPrograms(true)
+        if (list && list.length > 0) {
+          const formatted = list.map(p => `${p.title} (${p.age_range})`)
+          setPrograms(formatted)
+        }
+      } catch (err) {
+        console.error('Failed to load programs:', err)
+      }
+    }
+    loadPrograms()
+  }, [])
 
   const set = (k: keyof typeof INITIAL, v: string) => setForm(p => ({ ...p, [k]: v }))
 
@@ -148,7 +168,7 @@ export default function AdmissionPage() {
                     <label className="form-label">Program of Interest <span className="text-red-500">*</span></label>
                     <select className="form-input" value={form.program_interest} onChange={e => set('program_interest', e.target.value)}>
                       <option value="">Select a program…</option>
-                      {PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
+                      {programs.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
                   <div>
