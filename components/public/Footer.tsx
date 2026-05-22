@@ -125,10 +125,15 @@ export default function Footer({ settings }: { settings: SiteSettings | null }) 
             </form>
 
             <div className="pt-6 border-t border-white/5 space-y-3">
-              <div className="flex items-center gap-3 text-white/40 text-xs font-semibold">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings?.address ?? 'Plot A.H.E 26111, Sabon Lugbe, AMAC Estate, Airport Road, Abuja')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-white/40 hover:text-white/80 text-xs font-semibold transition-colors cursor-pointer"
+              >
                 <MapPin className="w-4 h-4 text-teal-500" />
                 {settings?.address ?? 'Airport Road, Abuja'}
-              </div>
+              </a>
               <div className="flex items-center gap-3 text-white/40 text-xs font-semibold">
                 <Phone className="w-4 h-4 text-teal-500" />
                 {settings?.phone1}

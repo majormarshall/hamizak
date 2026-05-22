@@ -161,12 +161,17 @@ export default function HeroSection({ settings }: Props) {
                 {p}
               </a>
             ))}
-            <div className="flex items-center gap-2.5 text-white/60 text-sm font-semibold group">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings?.address ?? 'Plot A.H.E 26111, Sabon Lugbe, AMAC Estate, Airport Road, Abuja')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 text-white/60 hover:text-white text-sm font-semibold transition-colors group cursor-pointer"
+            >
               <div className="p-2 bg-white/5 rounded-lg group-hover:bg-teal-500/20 group-hover:text-teal-400 transition-colors">
                 <MapPin className="w-4 h-4" />
               </div>
               Sabon Lugbe, Abuja
-            </div>
+            </a>
           </motion.div>
         </motion.div>
 
