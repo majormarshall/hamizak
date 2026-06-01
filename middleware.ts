@@ -29,7 +29,36 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname
 
-  // Protect all /admin routes
+  // ── Maintenance Mode ──────────────────────────────────────────────
+  // Only check for public routes (not /admin, /login, /maintenance itself)
+  const isPublicRoute =
+    !path.startsWith('/admin') &&
+    !path.startsWith('/login') &&
+    !path.startsWith('/maintenance') &&
+    !path.startsWith('/_next') &&
+    !path.startsWith('/api') &&
+    !path.match(/\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|woff2?)$/)
+
+  if (isPublicRoute) {
+    // Use admin client to read settings without RLS restrictions
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: settings } = await adminSupabase
+      .from('site_settings')
+      .select('maintenance_mode')
+      .eq('id', 1)
+      .single()
+
+    if (settings?.maintenance_mode === true) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/maintenance'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // ── Protect all /admin routes ────────────────────────────────────
   if (path.startsWith('/admin')) {
     if (!user) {
       const url = request.nextUrl.clone()
@@ -53,13 +82,12 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('error', 'unauthorized')
-      // Ensure the unauthorized user doesn't stay logged in
       await supabase.auth.signOut()
       return NextResponse.redirect(url)
     }
   }
 
-  // Redirect logged-in users away from login page
+  // ── Redirect logged-in users away from login page ────────────────
   if (path === '/login' && user) {
     if (request.nextUrl.searchParams.get('error') === 'unauthorized') {
       return response
@@ -73,5 +101,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/login'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }

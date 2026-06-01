@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Save, Upload, Loader2, Users, Trash2, Plus, ShieldCheck } from 'lucide-react'
+import { Save, Upload, Loader2, Users, Trash2, Plus, ShieldCheck, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { updateSiteSettings, addAdmin, removeAdmin } from '@/lib/actions'
 import { uploadImage } from '@/lib/utils'
@@ -19,7 +19,8 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
   const [data, setData] = useState<Partial<SiteSettings>>(settings ?? {})
   const [saving, setSaving] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
-  
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false)
+
   // Admin Management State
   const [newAdminEmail, setNewAdminEmail] = useState('')
   const [adminActionLoading, setAdminActionLoading] = useState(false)
@@ -28,6 +29,26 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
 
   function set(key: keyof SiteSettings, value: unknown) {
     setData(d => ({ ...d, [key]: value }))
+  }
+
+  async function handleMaintenanceToggle() {
+    const newValue = !data.maintenance_mode
+    setData(d => ({ ...d, maintenance_mode: newValue }))
+    setMaintenanceSaving(true)
+    try {
+      await updateSiteSettings({ maintenance_mode: newValue })
+      toast.success(
+        newValue ? '🚧 Maintenance mode is now ON' : '✅ Maintenance mode is now OFF',
+        { duration: 3000 }
+      )
+    } catch (err) {
+      // Revert on failure
+      setData(d => ({ ...d, maintenance_mode: !newValue }))
+      toast.error('Failed to update maintenance mode')
+      console.error(err)
+    } finally {
+      setMaintenanceSaving(false)
+    }
   }
 
   async function handleSave() {
@@ -263,11 +284,51 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <div className={`rounded-2xl border shadow-sm p-6 transition-colors duration-300 ${
+            data.maintenance_mode
+              ? 'bg-red-50 border-red-200'
+              : 'bg-white border-slate-100'
+          }`}>
             <h3 className="font-bold text-slate-900 text-sm mb-4 pb-3 border-b border-slate-100">Site Toggles</h3>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 space-y-1">
               <Toggle label="Online Applications Open" field="applications_open" />
-              <Toggle label="Maintenance Mode"          field="maintenance_mode" />
+
+              {/* ── Maintenance Mode — instant save ── */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-700">Maintenance Mode</span>
+                    {data.maintenance_mode && (
+                      <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        LIVE
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleMaintenanceToggle}
+                    disabled={maintenanceSaving}
+                    className={`relative w-11 h-6 rounded-full transition-all duration-300 disabled:opacity-70 ${
+                      data.maintenance_mode ? 'bg-red-500' : 'bg-slate-200'
+                    }`}
+                  >
+                    {maintenanceSaving ? (
+                      <Loader2 className="absolute top-1 left-1 w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
+                        data.maintenance_mode ? 'translate-x-5' : 'translate-x-0.5'
+                      }`} />
+                    )}
+                  </button>
+                </div>
+                {data.maintenance_mode && (
+                  <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    The public site is showing a maintenance page right now.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
