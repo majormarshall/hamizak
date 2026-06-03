@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import Navbar from '@/components/public/Navbar'
 import Footer from '@/components/public/Footer'
 import WhatsAppButton from '@/components/public/WhatsAppButton'
@@ -7,11 +6,6 @@ import { getSiteSettings } from '@/lib/actions'
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings()
-
-  // Maintenance mode — handled here instead of middleware to avoid DB calls in edge runtime
-  if (settings?.maintenance_mode) {
-    redirect('/maintenance')
-  }
 
   return (
     <>
