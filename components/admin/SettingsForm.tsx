@@ -7,7 +7,7 @@ import { updateSiteSettings, addAdmin, removeAdmin } from '@/lib/actions'
 import { uploadImage } from '@/lib/utils'
 import type { SiteSettings } from '@/types'
 
-const SUPER_ADMIN_EMAILS = ['alaminoseni22@gmail.com', 'hussainyusuf393@gmail.com']
+const SUPER_ADMIN_EMAILS = ['kalibest10@gmail.com', 'hussainyusuf393@gmail.com']
 
 interface Props {
   settings: SiteSettings | null
@@ -76,7 +76,7 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
     try {
       await addAdmin(newAdminEmail)
       setNewAdminEmail('')
-      toast.success('Admin added successfully')
+      toast.success('✉️ Invite sent! They will receive an email to set their password.')
     } catch (err: any) {
       toast.error(err.message || 'Failed to add admin')
     } finally {
@@ -260,7 +260,7 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
                 <div className="flex gap-2">
                   <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-teal-700 font-medium leading-snug">
-                    Only users on this list can access the admin dashboard.
+                    Adding an email sends them an invite link to set their own password. Only invited users can access the admin dashboard.
                   </p>
                 </div>
               </div>

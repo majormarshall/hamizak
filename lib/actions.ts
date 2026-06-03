@@ -483,8 +483,24 @@ export async function getAdmins(): Promise<{ email: string; role: string }[]> {
 
 export async function addAdmin(email: string) {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('admins').insert({ email: email.toLowerCase().trim() })
+  const cleanEmail = email.toLowerCase().trim()
+
+  // 1. Add to admins table
+  const { error } = await supabase.from('admins').insert({ email: cleanEmail })
   if (error) throw error
+
+  // 2. Send invite email via Supabase Auth
+  //    - If user already exists, this is a no-op (they can use Forgot Password)
+  //    - If user is new, they get an email with a link to set their password
+  try {
+    await supabase.auth.admin.inviteUserByEmail(cleanEmail, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hamizak-iota.vercel.app'}/admin`,
+    })
+  } catch (inviteErr) {
+    // Non-fatal: user may already exist. Log but don't throw.
+    console.warn('Invite email skipped (user may already exist):', inviteErr)
+  }
+
   revalidatePath('/admin/settings')
 }
 

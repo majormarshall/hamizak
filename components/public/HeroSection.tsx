@@ -34,19 +34,19 @@ const slideVariants = {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  show:   { opacity: 1, y: 0 },
+  show: { opacity: 1, y: 0 },
 }
 
 const stagger = {
   hidden: {},
-  show:   { transition: { staggerChildren: 0.12 } },
+  show: { transition: { staggerChildren: 0.12 } },
 }
 
 interface Props { settings: SiteSettings | null }
 
 export default function HeroSection({ settings }: Props) {
   const headline = settings?.hero_headline ?? "Nurturing Independent Learners for a Bright Future"
-  const subtitle  = settings?.hero_subtitle  ?? "Welcome to Hamizak Montessori Academy — Where Every Child Blooms"
+  const subtitle = settings?.hero_subtitle ?? "Welcome to Hamizak Montessori Academy — Where Every Child Blooms"
 
   const [[page, direction], setPage] = useState([0, 0])
   const currentIndex = ((page % schoolImages.length) + schoolImages.length) % schoolImages.length
@@ -66,7 +66,7 @@ export default function HeroSection({ settings }: Props) {
   const handlePrev = () => paginate(-1)
 
   return (
-    <section 
+    <section
       className="relative min-h-[92vh] flex items-center overflow-hidden"
       style={{ background: 'linear-gradient(160deg, #0b2a22 0%, #041510 100%)' }}
     >
@@ -248,9 +248,8 @@ export default function HeroSection({ settings }: Props) {
                       paginate(diff)
                     }
                   }}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    index === currentIndex ? 'w-6 bg-teal-400' : 'w-2.5 bg-white/20 hover:bg-white/40'
-                  }`}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${index === currentIndex ? 'w-6 bg-teal-400' : 'w-2.5 bg-white/20 hover:bg-white/40'
+                    }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
@@ -262,9 +261,9 @@ export default function HeroSection({ settings }: Props) {
       {/* Wave bottom */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-12 lg:h-20">
-          <path d="M0 80C240 26.6667 480 0 720 0C960 0 1200 26.6667 1440 80H0Z" fill="white"/>
+          <path d="M0 80C240 26.6667 480 0 720 0C960 0 1200 26.6667 1440 80H0Z" fill="white" />
         </svg>
       </div>
-    </section>
+      https://supabase.com/dashboard/project/goujqsklmwvdayhodrnu/auth/url-configuration    </section>
   )
 }
