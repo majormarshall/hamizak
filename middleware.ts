@@ -1,55 +1,67 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-/**
- * Middleware — edge runtime, ZERO DB calls, ZERO network calls.
- *
- * Responsibilities:
- *  1. Skip immediately for static assets, API, auth routes
- *  2. Public routes  → pass through instantly (no checks)
- *  3. /admin routes  → check session from cookie (local JWT decode, no network)
- *                      → redirect to /login if no session
- *                      → admin email authorization runs in admin/layout.tsx (Node.js)
- *  4. /login page    → redirect already-logged-in users to /admin
- *
- * Maintenance mode  → handled in app/(public)/layout.tsx (server component, Node.js)
- * Admin auth check  → handled in app/admin/layout.tsx     (server component, Node.js)
- */
+// ── In-memory maintenance mode cache (60s TTL) ────────────────────────────────
+// Middleware runs on every request, so we cache the DB result to avoid
+// a Supabase round-trip on each page load (which causes 504 timeouts on Vercel).
+let maintenanceCache: { value: boolean; expiresAt: number } | null = null
+
+async function getMaintenanceMode(): Promise<boolean> {
+  const now = Date.now()
+  if (maintenanceCache && now < maintenanceCache.expiresAt) {
+    return maintenanceCache.value
+  }
+
+  const adminSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data } = await adminSupabase
+    .from('site_settings')
+    .select('maintenance_mode')
+    .eq('id', 1)
+    .single()
+
+  const value = data?.maintenance_mode === true
+  maintenanceCache = { value, expiresAt: now + 60_000 } // cache for 60 seconds
+  return value
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
-  const { pathname } = request.nextUrl
+  const path = request.nextUrl.pathname
 
-  // ── 1. Skip — static assets, API, auth callback, maintenance page ──────────
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/maintenance') ||
-    pathname.match(/\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|woff2?|txt|xml|map)$/)
-  ) {
+  // ── Maintenance Mode ──────────────────────────────────────────────────────
+  // Only applies to public-facing pages (not admin, login, maintenance, assets)
+  const isPublicRoute =
+    !path.startsWith('/admin') &&
+    !path.startsWith('/login') &&
+    !path.startsWith('/maintenance') &&
+    !path.startsWith('/_next') &&
+    !path.startsWith('/api') &&
+    !path.match(/\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|woff2?)$/)
+
+  if (isPublicRoute) {
+    const inMaintenance = await getMaintenanceMode()
+    if (inMaintenance) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/maintenance'
+      return NextResponse.redirect(url)
+    }
+    // Public route, not in maintenance — no need to check auth
     return response
   }
 
-  // ── 2. Public routes — zero checks needed ────────────────────────────────
-  const isAdminRoute = pathname.startsWith('/admin')
-  const isLoginPage  = pathname === '/login'
-
-  if (!isAdminRoute && !isLoginPage) {
-    return response  // public pages pass through instantly
-  }
-
-  // ── 3 & 4. Auth check for /admin and /login only ─────────────────────────
-  // createServerClient is needed to keep the Supabase session cookie refreshed.
-  // getSession() decodes the JWT from the cookie — NO network round-trip.
+  // ── Auth check (only needed for /admin and /login routes) ─────────────────
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
+        get(name: string) { return request.cookies.get(name)?.value },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options })
           response = NextResponse.next({ request: { headers: request.headers } })
@@ -64,18 +76,39 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // ── /admin: redirect to login if no session ──────────────────────────────
-  if (isAdminRoute && !session) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+  // ── Protect all /admin routes ─────────────────────────────────────────────
+  if (path.startsWith('/admin')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: isAdmin } = await adminSupabase
+      .from('admins')
+      .select('email')
+      .eq('email', user.email)
+      .single()
+
+    const HARDCODED_ADMINS = ['kalibest10@gmail.com', 'hussainyusuf393@gmail.com']
+    if (!isAdmin && !HARDCODED_ADMINS.includes(user.email ?? '')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('error', 'unauthorized')
+      await supabase.auth.signOut()
+      return NextResponse.redirect(url)
+    }
   }
 
-  // ── /login: redirect to admin if already logged in ───────────────────────
-  if (isLoginPage && session) {
-    // Allow landing on /login?error=unauthorized even if logged in
+  // ── Redirect logged-in users away from /login ─────────────────────────────
+  if (path === '/login' && user) {
     if (request.nextUrl.searchParams.get('error') === 'unauthorized') {
       return response
     }

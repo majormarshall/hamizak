@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminTopbar from '@/components/admin/AdminTopbar'
-
-const SUPER_ADMINS = ['kalibest10@gmail.com', 'hussainyusuf393@gmail.com']
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   let user = null
@@ -16,20 +14,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   if (!user) redirect('/login')
-
-  // ── Authorization: check if this user is an approved admin ──────────────
-  // This runs in Node.js runtime so no edge timeout risk
-  const email = user.email ?? ''
-  if (!SUPER_ADMINS.includes(email)) {
-    const adminSupabase = createAdminClient()
-    const { data: isAdmin } = await adminSupabase
-      .from('admins')
-      .select('email')
-      .eq('email', email)
-      .single()
-
-    if (!isAdmin) redirect('/login?error=unauthorized')
-  }
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
