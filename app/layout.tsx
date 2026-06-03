@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Nunito, Open_Sans } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const nunito = Nunito({
@@ -48,7 +47,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             success: { iconTheme: { primary: '#2D6A4F', secondary: '#fff' } },
           }}
         />
-        <SpeedInsights />
       </body>
     </html>
   )
