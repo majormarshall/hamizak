@@ -2,60 +2,34 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// ── In-memory maintenance mode cache (60s TTL) ────────────────────────────────
-// Middleware runs on every request, so we cache the DB result to avoid
-// a Supabase round-trip on each page load (which causes 504 timeouts on Vercel).
-let maintenanceCache: { value: boolean; expiresAt: number } | null = null
-
-async function getMaintenanceMode(): Promise<boolean> {
-  const now = Date.now()
-  if (maintenanceCache && now < maintenanceCache.expiresAt) {
-    return maintenanceCache.value
-  }
-
-  const adminSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
-  const { data } = await adminSupabase
-    .from('site_settings')
-    .select('maintenance_mode')
-    .eq('id', 1)
-    .single()
-
-  const value = data?.maintenance_mode === true
-  maintenanceCache = { value, expiresAt: now + 60_000 } // cache for 60 seconds
-  return value
-}
-
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
   const path = request.nextUrl.pathname
 
-  // ── Maintenance Mode ──────────────────────────────────────────────────────
-  // Only applies to public-facing pages (not admin, login, maintenance, assets)
-  const isPublicRoute =
-    !path.startsWith('/admin') &&
-    !path.startsWith('/login') &&
-    !path.startsWith('/maintenance') &&
-    !path.startsWith('/_next') &&
-    !path.startsWith('/api') &&
-    !path.match(/\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|woff2?)$/)
-
-  if (isPublicRoute) {
-    const inMaintenance = await getMaintenanceMode()
-    if (inMaintenance) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/maintenance'
-      return NextResponse.redirect(url)
-    }
-    // Public route, not in maintenance — no need to check auth
+  // ── Skip middleware entirely for static assets & auth callback ────────────
+  // These never need auth or maintenance checks
+  if (
+    path.startsWith('/_next') ||
+    path.startsWith('/api') ||
+    path.startsWith('/auth') ||
+    path.startsWith('/maintenance') ||
+    path.match(/\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|woff2?|txt|xml)$/)
+  ) {
     return response
   }
 
-  // ── Auth check (only needed for /admin and /login routes) ─────────────────
+  // ── Public routes: no DB calls at all ────────────────────────────────────
+  // Maintenance mode is handled inside the public page (server component),
+  // which avoids a Supabase round-trip on every middleware invocation.
+  const isAdminRoute = path.startsWith('/admin')
+  const isLoginPage  = path === '/login'
+
+  if (!isAdminRoute && !isLoginPage) {
+    return response
+  }
+
+  // ── Auth check (only /admin and /login routes reach here) ─────────────────
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -78,37 +52,40 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // ── Protect all /admin routes ─────────────────────────────────────────────
-  if (path.startsWith('/admin')) {
+  // ── Protect /admin routes ─────────────────────────────────────────────────
+  if (isAdminRoute) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
     }
 
-    const adminSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    // Hardcoded super-admins bypass the DB lookup (saves a round-trip)
+    const SUPER_ADMINS = ['kalibest10@gmail.com', 'hussainyusuf393@gmail.com']
+    if (!SUPER_ADMINS.includes(user.email ?? '')) {
+      // Only hit the DB for non-super-admins
+      const adminSupabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+      const { data: isAdmin } = await adminSupabase
+        .from('admins')
+        .select('email')
+        .eq('email', user.email)
+        .single()
 
-    const { data: isAdmin } = await adminSupabase
-      .from('admins')
-      .select('email')
-      .eq('email', user.email)
-      .single()
-
-    const HARDCODED_ADMINS = ['kalibest10@gmail.com', 'hussainyusuf393@gmail.com']
-    if (!isAdmin && !HARDCODED_ADMINS.includes(user.email ?? '')) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('error', 'unauthorized')
-      await supabase.auth.signOut()
-      return NextResponse.redirect(url)
+      if (!isAdmin) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        url.searchParams.set('error', 'unauthorized')
+        await supabase.auth.signOut()
+        return NextResponse.redirect(url)
+      }
     }
   }
 
-  // ── Redirect logged-in users away from /login ─────────────────────────────
-  if (path === '/login' && user) {
+  // ── Redirect already-logged-in users away from /login ─────────────────────
+  if (isLoginPage && user) {
     if (request.nextUrl.searchParams.get('error') === 'unauthorized') {
       return response
     }
