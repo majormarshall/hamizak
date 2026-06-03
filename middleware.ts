@@ -1,6 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
@@ -50,42 +49,25 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // Use getSession() — reads JWT from cookie locally, NO network call (avoids 504 timeout)
+  // Admin page server components re-verify with getUser() for full security
+  const { data: { session } } = await supabase.auth.getSession()
+  const userEmail = session?.user?.email ?? null
 
   // ── Protect /admin routes ─────────────────────────────────────────────────
   if (isAdminRoute) {
-    if (!user) {
+    if (!session) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
     }
 
-    // Hardcoded super-admins bypass the DB lookup (saves a round-trip)
-    const SUPER_ADMINS = ['kalibest10@gmail.com', 'hussainyusuf393@gmail.com']
-    if (!SUPER_ADMINS.includes(user.email ?? '')) {
-      // Only hit the DB for non-super-admins
-      const adminSupabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-      const { data: isAdmin } = await adminSupabase
-        .from('admins')
-        .select('email')
-        .eq('email', user.email)
-        .single()
-
-      if (!isAdmin) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        url.searchParams.set('error', 'unauthorized')
-        await supabase.auth.signOut()
-        return NextResponse.redirect(url)
-      }
-    }
+    // All admin email checking is deferred to the admin layout server component
+    // where it runs in Node.js runtime (no timeout constraints)
   }
 
   // ── Redirect already-logged-in users away from /login ─────────────────────
-  if (isLoginPage && user) {
+  if (isLoginPage && session) {
     if (request.nextUrl.searchParams.get('error') === 'unauthorized') {
       return response
     }
