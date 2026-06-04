@@ -73,7 +73,7 @@ export default function Footer({ settings }: { settings: SiteSettings | null }) 
               </div>
             </div>
             <p className="text-white/40 text-sm leading-relaxed font-medium max-w-sm">
-              Nurturing independent learners and confident children since September 9, 2016. Where every child blooms through discipline, integrity, and excellence.
+              Nurturing independent learners and confident children since 2010. Where every child blooms through discipline, integrity, and excellence.
             </p>
             {socials.length > 0 && (
               <div className="flex gap-3 pt-2">
@@ -125,15 +125,10 @@ export default function Footer({ settings }: { settings: SiteSettings | null }) 
             </form>
 
             <div className="pt-6 border-t border-white/5 space-y-3">
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings?.address ?? 'Plot A.H.E 26111, Sabon Lugbe, AMAC Estate, Airport Road, Abuja')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-white/40 hover:text-white/80 text-xs font-semibold transition-colors cursor-pointer"
-              >
+              <div className="flex items-center gap-3 text-white/40 text-xs font-semibold">
                 <MapPin className="w-4 h-4 text-teal-500" />
                 {settings?.address ?? 'Airport Road, Abuja'}
-              </a>
+              </div>
               <div className="flex items-center gap-3 text-white/40 text-xs font-semibold">
                 <Phone className="w-4 h-4 text-teal-500" />
                 {settings?.phone1}

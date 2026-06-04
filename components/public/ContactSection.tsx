@@ -26,34 +26,11 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
     }
   }
 
-  const addressVal = settings?.address ?? 'Plot A.H.E 26111, Sabon Lugbe, AMAC Estate, Airport Road, Abuja'
-  const emailVal = settings?.email ?? 'info@hamizakmontessori.edu.ng'
-
   const info = [
-    {
-      icon: MapPin,
-      label: 'Address',
-      value: addressVal,
-      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressVal)}`,
-      target: '_blank'
-    },
-    {
-      icon: Phone,
-      label: 'Phone',
-      value: `${settings?.phone1 ?? '08032253811'} | ${settings?.phone2 ?? '08062418351'}`,
-      href: `tel:${settings?.phone1 ?? '08032253811'}`
-    },
-    {
-      icon: Mail,
-      label: 'Email',
-      value: emailVal,
-      href: `mailto:${emailVal}`
-    },
-    {
-      icon: Clock,
-      label: 'Hours',
-      value: 'Mon – Fri: 7:30am – 3:30pm'
-    },
+    { icon: MapPin, label: 'Address', value: settings?.address ?? 'Plot A.H.E 26111, Sabon Lugbe, AMAC Estate, Airport Road, Abuja' },
+    { icon: Phone,  label: 'Phone',   value: `${settings?.phone1 ?? '08032253811'} | ${settings?.phone2 ?? '08062418351'}` },
+    { icon: Mail,   label: 'Email',   value: settings?.email ?? 'info@hamizakmontessori.edu.ng' },
+    { icon: Clock,  label: 'Hours',   value: 'Mon – Fri: 7:30am – 3:30pm' },
   ]
 
   return (
@@ -81,48 +58,30 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
             className="space-y-10"
           >
             <div className="grid sm:grid-cols-2 gap-8">
-              {info.map(({ icon: Icon, label, value, href, target }) => {
-                const CardContent = (
-                  <>
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-5 h-5 text-teal-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-1">{label}</p>
-                      <p className="text-slate-600 text-sm font-semibold leading-relaxed group-hover:text-teal-600 transition-colors">{value}</p>
-                    </div>
-                  </>
-                )
-
-                return href ? (
-                  <a
-                    key={label}
-                    href={href}
-                    target={target}
-                    rel={target === '_blank' ? 'noopener noreferrer' : undefined}
-                    className="group block cursor-pointer"
-                  >
-                    {CardContent}
-                  </a>
-                ) : (
-                  <div key={label} className="group">
-                    {CardContent}
+              {info.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="group">
+                  <div className="w-12 h-12 rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Icon className="w-5 h-5 text-teal-600" />
                   </div>
-                )
-              })}
+                  <div>
+                    <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-1">{label}</p>
+                    <p className="text-slate-600 text-sm font-semibold leading-relaxed">{value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Live Interactive Map */}
+            {/* Map placeholder */}
             <div className="w-full h-64 rounded-[2rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
-              <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(addressVal)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                width="100%"
-                height="100%"
-                className="border-0 opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-                allowFullScreen
-                loading="lazy"
-                title="School Location Map"
-              />
+              <div className="absolute inset-0 bg-teal-500/5 flex flex-col items-center justify-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+                  <MapPin className="w-8 h-8 text-teal-500" />
+                </div>
+                <div className="text-center px-6">
+                  <p className="text-slate-900 font-black tracking-tight text-lg">Airport Road, Abuja</p>
+                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Visit Our Campus</p>
+                </div>
+              </div>
             </div>
           </motion.div>
 

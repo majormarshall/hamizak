@@ -9,40 +9,6 @@ import type {
   WhyChooseFeature, AdmissionStep, ApplicationStatus
 } from '@/types'
 
-// ─── Storage Actions ─────────────────────────────────────────────
-export async function uploadImageServer(formData: FormData, bucket: string, folder: string) {
-  const file = formData.get('file') as File
-  if (!file) throw new Error('No file provided')
-
-  const supabase = createAdminClient()
-  const ext = file.name.split('.').pop()
-  const fileName = `${folder ? folder + '/' : ''}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-
-  // Convert Next.js File to Buffer for Supabase
-  const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-
-  const { error } = await supabase.storage.from(bucket).upload(fileName, buffer, {
-    contentType: file.type,
-    cacheControl: '3600',
-    upsert: false,
-  })
-  if (error) {
-    console.error('Supabase upload error:', error)
-    throw error
-  }
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
-  return data.publicUrl
-}
-
-export async function deleteImageServer(url: string, bucket: string) {
-  const supabase = createAdminClient()
-  const path = url.split(`/${bucket}/`)[1]
-  if (!path) return
-  await supabase.storage.from(bucket).remove([path])
-}
-
 // ─── Site Settings ───────────────────────────────────────────────
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   const supabase = await createClient()
@@ -257,175 +223,15 @@ export async function getApplications(): Promise<AdmissionApplication[]> {
   return data ?? []
 }
 
-export async function sendAdmissionEmail(
-  parentEmail: string,
-  parentName: string,
-  childName: string,
-  status: 'enrolled' | 'declined',
-  admissionNumber?: string
-) {
-  const apiKey = process.env.RESEND_API_KEY
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-  const subject = status === 'enrolled'
-    ? `Admission Successful - ${childName} | Hamizak Montessori Academy`
-    : `Admission Status Update - ${childName} | Hamizak Montessori Academy`
-
-  const html = status === 'enrolled'
-    ? `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; line-height: 1.6;">
-        <h2 style="color: #0d9488; margin-top: 0;">Admission Successful!</h2>
-        <p>Dear ${parentName},</p>
-        <p>We are delighted to inform you that the admission application for <strong>${childName}</strong> has been <strong>approved</strong>.</p>
-        ${admissionNumber ? `<p style="font-size: 16px; background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; display: inline-block;">
-          Assigned Admission Number: <strong>${admissionNumber}</strong>
-        </p>` : ''}
-        <p>Our admissions team will contact you shortly with details regarding next steps, parent orientation, and schedule/fees.</p>
-        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">
-          Best regards,<br/><strong>Hamizak Montessori Academy</strong>
-        </p>
-       </div>`
-    : `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; line-height: 1.6;">
-        <h2 style="color: #e11d48; margin-top: 0;">Admission Application Update</h2>
-        <p>Dear ${parentName},</p>
-        <p>Thank you for your interest in Hamizak Montessori Academy. We have reviewed your application for <strong>${childName}</strong>.</p>
-        <p>At this time, we regret to inform you that we are unable to offer admission for this cycle. We appreciate the opportunity to learn about your family and wish your child the best in their academic future.</p>
-        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">
-          Best regards,<br/><strong>Hamizak Montessori Academy</strong>
-        </p>
-       </div>`
-
-  if (!apiKey) {
-    console.warn(`[EMAIL SIMULATION] To: ${parentEmail} | Subject: ${subject}\nBody: ${html}`)
-    return { simulated: true }
-  }
-
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        from: `Hamizak Montessori Academy <${fromEmail}>`,
-        to: parentEmail,
-        subject: subject,
-        html: html
-      })
-    })
-    const data = await res.json()
-    return { success: res.ok, data }
-  } catch (err) {
-    console.error('Error sending email via Resend:', err)
-    throw err
-  }
-}
-
 export async function updateApplicationStatus(id: string, status: ApplicationStatus) {
   const supabase = createAdminClient()
-  
-  // 1. Fetch current application details to send email
-  const { data: app, error: fetchError } = await supabase
-    .from('admission_applications')
-    .select('*')
-    .eq('id', id)
-    .single()
-    
-  if (fetchError || !app) {
-    throw new Error(fetchError?.message || 'Application not found')
-  }
-
-  // 2. Update status
-  const { error: updateError } = await supabase
-    .from('admission_applications')
-    .update({ status })
-    .eq('id', id)
-    
-  if (updateError) throw updateError
-
-  // 3. Send email if status is enrolled or declined
-  if (status === 'enrolled' || status === 'declined') {
-    const notes = app.additional_notes || ''
-    const match = notes.match(/\[ADMISSION_NO:\s*([^\]]+)\]/)
-    const admissionNumber = match ? match[1] : undefined
-    
-    try {
-      await sendAdmissionEmail(
-        app.parent_email,
-        app.parent_name,
-        app.child_name,
-        status,
-        admissionNumber
-      )
-    } catch (e) {
-      console.error('Failed to send admission email:', e)
-    }
-  }
-
+  await supabase.from('admission_applications').update({ status }).eq('id', id)
   revalidatePath('/admin/admissions')
-}
-
-export async function updateApplication(id: string, updates: Partial<AdmissionApplication>) {
-  const supabase = createAdminClient()
-
-  // 1. Fetch current application details to compare status and get email info
-  const { data: currentApp, error: fetchError } = await supabase
-    .from('admission_applications')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (fetchError || !currentApp) {
-    throw new Error(fetchError?.message || 'Application not found')
-  }
-
-  // 2. Perform the update
-  const { data, error } = await supabase
-    .from('admission_applications')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error) throw error
-
-  // 3. Send email if status is changed to enrolled or declined
-  if (updates.status && updates.status !== currentApp.status && (updates.status === 'enrolled' || updates.status === 'declined')) {
-    const notes = updates.additional_notes || currentApp.additional_notes || ''
-    const match = notes.match(/\[ADMISSION_NO:\s*([^\]]+)\]/)
-    const admissionNumber = match ? match[1] : undefined
-    
-    try {
-      await sendAdmissionEmail(
-        currentApp.parent_email,
-        currentApp.parent_name,
-        currentApp.child_name,
-        updates.status,
-        admissionNumber
-      )
-    } catch (e) {
-      console.error('Failed to send admission email:', e)
-    }
-  }
-
-  revalidatePath('/admin/admissions')
-  return data
 }
 
 export async function deleteApplication(id: string) {
   const supabase = createAdminClient()
   await supabase.from('admission_applications').delete().eq('id', id)
-  revalidatePath('/admin/admissions')
-}
-
-export async function clearAllApplications() {
-  const supabase = createAdminClient()
-  const { error } = await supabase
-    .from('admission_applications')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000')
-  if (error) throw error
   revalidatePath('/admin/admissions')
 }
 
@@ -483,24 +289,8 @@ export async function getAdmins(): Promise<{ email: string; role: string }[]> {
 
 export async function addAdmin(email: string) {
   const supabase = createAdminClient()
-  const cleanEmail = email.toLowerCase().trim()
-
-  // 1. Add to admins table
-  const { error } = await supabase.from('admins').insert({ email: cleanEmail })
+  const { error } = await supabase.from('admins').insert({ email: email.toLowerCase().trim() })
   if (error) throw error
-
-  // 2. Send invite email via Supabase Auth
-  //    - If user already exists, this is a no-op (they can use Forgot Password)
-  //    - If user is new, they get an email with a link to set their password
-  try {
-    await supabase.auth.admin.inviteUserByEmail(cleanEmail, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hamizak-iota.vercel.app'}/admin`,
-    })
-  } catch (inviteErr) {
-    // Non-fatal: user may already exist. Log but don't throw.
-    console.warn('Invite email skipped (user may already exist):', inviteErr)
-  }
-
   revalidatePath('/admin/settings')
 }
 
