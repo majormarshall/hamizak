@@ -30,7 +30,7 @@ export default function AdminSidebar() {
   const path = usePathname()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
-  const [portalsOpen, setPortalsOpen] = useState(false)
+  const [portalsOpen, setPortalsOpen] = useState(true)
 
   async function handleLogout() {
     await supabase.auth.signOut()

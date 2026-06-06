@@ -89,6 +89,16 @@ async function run() {
       features: ["Robotics & STEM", "Science lab experiments", "VR learning experiences", "Music & arts", "Vocational skills"],
       display_order: 3,
       is_active: true
+    },
+    {
+      title: 'High School',
+      age_range: '12 – 18 years',
+      description: 'Advanced secondary education preparing students for global tertiary education and career paths, with specialized focus on college prep, STEM, and leadership.',
+      image_url: '/images/stem-robotics.jpg',
+      icon: '🎓',
+      features: ["College & university prep", "Advanced STEM & arts", "Leadership development", "WAEC & international exams"],
+      display_order: 4,
+      is_active: true
     }
   ]
 

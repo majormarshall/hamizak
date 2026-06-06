@@ -36,7 +36,7 @@ export default async function ProgramsPage() {
             Montessori at Every Stage
           </h1>
           <p className="text-white/60 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
-            Three carefully designed programs that meet children exactly where they are
+            Carefully designed programs that meet children exactly where they are
             and guide them toward their fullest potential through discovery and play.
           </p>
           <div className="mt-10 flex gap-4 justify-center flex-wrap">
