@@ -135,7 +135,7 @@ export interface AdmissionApplication {
   how_heard: string
   additional_notes: string
   status: ApplicationStatus
-  admission_number: string | null
+  admission_number?: string | null
   created_at: string
 }
 
