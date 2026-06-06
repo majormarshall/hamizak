@@ -184,7 +184,10 @@ export async function deleteEvent(id: string) {
 export async function submitContactMessage(data: Omit<ContactMessage, 'id' | 'is_read' | 'created_at'>) {
   const supabase = await createClient()
   const { error } = await supabase.from('contact_messages').insert({ ...data, is_read: false })
-  if (error) throw error
+  if (error) {
+    console.error('❌ database insertion error in submitContactMessage:', error)
+    throw error
+  }
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
@@ -211,7 +214,10 @@ export async function submitApplication(
 ) {
   const supabase = await createClient()
   const { error } = await supabase.from('admission_applications').insert({ ...data, status: 'new' })
-  if (error) throw error
+  if (error) {
+    console.error('❌ database insertion error in submitApplication:', error)
+    throw error
+  }
 }
 
 export async function getApplications(): Promise<AdmissionApplication[]> {
