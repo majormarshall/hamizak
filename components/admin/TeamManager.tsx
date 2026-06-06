@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, Loader2, Save } from 'lucide-react'
+import { Plus, X, Loader2, Save, User } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { upsertStaff, deleteStaff } from '@/lib/actions'
-import { uploadImage } from '@/lib/utils'
 import AdminTable from '@/components/admin/AdminTable'
 import type { StaffMember } from '@/types'
 
@@ -14,23 +13,52 @@ const EMPTY: Partial<StaffMember> = {
   name: '', role: '', bio: '', photo_url: '', is_active: true
 }
 
-export default function TeamManager({ initial }: Props) {
-  const [staff, setStaff]     = useState<StaffMember[]>(initial)
-  const [modal, setModal]     = useState(false)
-  const [editing, setEditing] = useState<Partial<StaffMember>>(EMPTY)
-  const [saving, setSaving]   = useState(false)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
+/** Upload via server-side API route (uses service role — bypasses RLS) */
+async function uploadViaApi(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('bucket', 'media')
+  form.append('folder', 'team')
+  const res = await fetch('/api/upload', { method: 'POST', body: form })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unknown upload error' }))
+    throw new Error(err.error ?? 'Upload failed')
+  }
+  const { url } = await res.json()
+  return url
+}
 
-  function openNew()              { setEditing(EMPTY); setPhotoFile(null); setModal(true) }
-  function openEdit(m: StaffMember) { setEditing({ ...m }); setPhotoFile(null); setModal(true) }
+export default function TeamManager({ initial }: Props) {
+  const [staff, setStaff]         = useState<StaffMember[]>(initial)
+  const [modal, setModal]         = useState(false)
+  const [editing, setEditing]     = useState<Partial<StaffMember>>(EMPTY)
+  const [saving, setSaving]       = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [uploadPct, setUploadPct] = useState(0)
+
+  function openNew()               { setEditing(EMPTY); setPhotoFile(null); setUploadPct(0); setModal(true) }
+  function openEdit(m: StaffMember){ setEditing({ ...m }); setPhotoFile(null); setUploadPct(0); setModal(true) }
 
   async function handleSave() {
     if (!editing.name || !editing.role) return toast.error('Name and role are required.')
     setSaving(true)
     try {
       let data = { ...editing, is_active: true }
-      if (photoFile) data.photo_url = await uploadImage(photoFile, 'media', 'team')
+
+      if (photoFile) {
+        setUploadPct(20)
+        try {
+          data.photo_url = await uploadViaApi(photoFile)
+          setUploadPct(80)
+        } catch (uploadErr) {
+          console.error('Photo upload failed:', uploadErr)
+          toast.error('Photo upload failed — saving without photo.')
+          // Continue saving without photo rather than blocking the whole save
+        }
+      }
+
       const result = await upsertStaff(data)
+      setUploadPct(100)
       toast.success(editing.id ? 'Profile updated!' : 'Staff member added!')
       if (editing.id) {
         setStaff(s => s.map(x => x.id === result.id ? result : x))
@@ -39,9 +67,11 @@ export default function TeamManager({ initial }: Props) {
       }
       setModal(false)
     } catch (err) {
-      toast.error('Failed to save.'); console.error(err)
+      console.error('Save error:', err)
+      toast.error('Failed to save — check console for details.')
     } finally {
       setSaving(false)
+      setUploadPct(0)
     }
   }
 
@@ -121,15 +151,30 @@ export default function TeamManager({ initial }: Props) {
                   />
                 ) : (
                   <div className="w-16 h-16 rounded-xl bg-white ring-1 ring-slate-200 flex items-center justify-center text-slate-300 shadow-sm">
-                    <Plus className="w-6 h-6" />
+                    <User className="w-7 h-7" />
                   </div>
                 )}
-                <div>
-                  <label className="btn-outline-green cursor-pointer text-xs">
-                    {photoFile ? 'Change Photo' : 'Upload Photo'}
-                    <input type="file" accept="image/*" className="hidden" onChange={e => setPhotoFile(e.target.files?.[0] ?? null)} />
+                <div className="flex-1">
+                  <label className="btn-outline-green cursor-pointer text-xs inline-block">
+                    {photoFile ? 'Change Photo' : editing.photo_url ? 'Replace Photo' : 'Upload Photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => setPhotoFile(e.target.files?.[0] ?? null)}
+                    />
                   </label>
-                  <p className="text-[10px] text-slate-400 mt-1.5">Square image recommended</p>
+                  <p className="text-[10px] text-slate-400 mt-1.5">
+                    {photoFile ? `Selected: ${photoFile.name}` : 'Square image recommended (optional)'}
+                  </p>
+                  {saving && uploadPct > 0 && uploadPct < 100 && (
+                    <div className="mt-2 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-teal-500 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${uploadPct}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -137,15 +182,31 @@ export default function TeamManager({ initial }: Props) {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="form-label">Full Name *</label>
-                  <input className="form-input" value={editing.name ?? ''} onChange={e => setEditing(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Amina Suleiman" />
+                  <input
+                    className="form-input"
+                    value={editing.name ?? ''}
+                    onChange={e => setEditing(p => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. Amina Suleiman"
+                  />
                 </div>
                 <div>
                   <label className="form-label">Role / Title *</label>
-                  <input className="form-input" value={editing.role ?? ''} onChange={e => setEditing(p => ({ ...p, role: e.target.value }))} placeholder="e.g. Lead Teacher" />
+                  <input
+                    className="form-input"
+                    value={editing.role ?? ''}
+                    onChange={e => setEditing(p => ({ ...p, role: e.target.value }))}
+                    placeholder="e.g. Lead Teacher"
+                  />
                 </div>
                 <div className="sm:col-span-2">
                   <label className="form-label">Short Bio</label>
-                  <textarea className="form-input resize-none" rows={3} value={editing.bio ?? ''} onChange={e => setEditing(p => ({ ...p, bio: e.target.value }))} placeholder="Brief professional background…" />
+                  <textarea
+                    className="form-input resize-none"
+                    rows={3}
+                    value={editing.bio ?? ''}
+                    onChange={e => setEditing(p => ({ ...p, bio: e.target.value }))}
+                    placeholder="Brief professional background…"
+                  />
                 </div>
               </div>
             </div>

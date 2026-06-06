@@ -235,6 +235,25 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
   revalidatePath('/admin/admissions')
 }
 
+export async function generateAdmissionNumber(id: string): Promise<string> {
+  const supabase = createAdminClient()
+  const year = new Date().getFullYear()
+  // Count existing applications that already have a number this year
+  const { count } = await supabase
+    .from('admission_applications')
+    .select('*', { count: 'exact', head: true })
+    .not('admission_number', 'is', null)
+  const seq = String((count ?? 0) + 1).padStart(3, '0')
+  const admissionNumber = `HMA/${year}/${seq}`
+  const { error } = await supabase
+    .from('admission_applications')
+    .update({ admission_number: admissionNumber })
+    .eq('id', id)
+  if (error) throw error
+  revalidatePath('/admin/admissions')
+  return admissionNumber
+}
+
 export async function deleteApplication(id: string) {
   const supabase = createAdminClient()
   await supabase.from('admission_applications').delete().eq('id', id)

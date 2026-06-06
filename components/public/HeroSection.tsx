@@ -1,9 +1,11 @@
 'use client'
 
+import { useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Phone, MapPin, ArrowRight } from 'lucide-react'
+import { Phone, MapPin, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import useEmblaCarousel from 'embla-carousel-react'
 import type { SiteSettings } from '@/types'
 
 const fadeUp = {
@@ -16,14 +18,45 @@ const stagger = {
   show:   { transition: { staggerChildren: 0.12 } },
 }
 
+// School photo slides — swap in real URLs as you upload them to Supabase
+const SLIDES = [
+  {
+    src: '/images/school-building-main.jpg',
+    caption: "Our Campus",
+    sub: "Sabon Lugbe, Abuja",
+  },
+  {
+    src: '/images/school-building-main.jpg',
+    caption: "Learning Environments",
+    sub: "Thoughtfully designed spaces",
+  },
+  {
+    src: '/images/school-building-main.jpg',
+    caption: "Montessori in Action",
+    sub: "Child-led discovery every day",
+  },
+]
+
 interface Props { settings: SiteSettings | null }
 
 export default function HeroSection({ settings }: Props) {
   const headline = settings?.hero_headline ?? "Nurturing Independent Learners for a Bright Future"
   const subtitle  = settings?.hero_subtitle  ?? "Welcome to Hamizak Montessori Academy — Where Every Child Blooms"
 
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
+
+  // Auto-play every 4 seconds
+  useEffect(() => {
+    if (!emblaApi) return
+    const id = setInterval(() => emblaApi.scrollNext(), 4000)
+    return () => clearInterval(id)
+  }, [emblaApi])
+
   return (
-    <section 
+    <section
       className="relative min-h-[92vh] flex items-center overflow-hidden"
       style={{ background: 'linear-gradient(160deg, #0b2a22 0%, #041510 100%)' }}
     >
@@ -127,28 +160,74 @@ export default function HeroSection({ settings }: Props) {
           </motion.div>
         </motion.div>
 
-        {/* Stats panel */}
+        {/* ── Image Slider ── */}
         <motion.div
-          className="lg:col-span-2 grid grid-cols-2 gap-4"
+          className="lg:col-span-2"
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          {[
-            { n: '15+',   label: 'Years of Excellence', color: 'from-teal-500/20 to-teal-500/5' },
-            { n: '200+',  label: 'Happy Families', color: 'from-emerald-500/20 to-emerald-500/5' },
-            { n: '3',     label: 'Montessori Levels', color: 'from-blue-500/20 to-blue-500/5' },
-            { n: '98%',   label: 'Parent Satisfaction', color: 'from-amber-500/20 to-amber-500/5' },
-          ].map(({ n, label, color }) => (
-            <div
-              key={label}
-              className={`bg-gradient-to-br ${color} backdrop-blur-md border border-white/10 rounded-3xl
-                         p-6 text-center hover:scale-[1.02] transition-all duration-300 shadow-xl`}
-            >
-              <p className="font-heading font-black text-4xl text-white mb-2">{n}</p>
-              <p className="text-white/50 text-[10px] font-black uppercase tracking-widest leading-tight">{label}</p>
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10">
+            {/* Carousel viewport */}
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex">
+                {SLIDES.map((slide, i) => (
+                  <div key={i} className="relative flex-[0_0_100%] aspect-[4/3]">
+                    <Image
+                      src={slide.src}
+                      alt={slide.caption}
+                      fill
+                      className="object-cover"
+                      priority={i === 0}
+                    />
+                    {/* Slide caption overlay */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-5 py-4">
+                      <p className="text-white font-bold text-sm leading-tight">{slide.caption}</p>
+                      <p className="text-white/60 text-[11px] font-medium mt-0.5">{slide.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+
+            {/* Controls */}
+            <button
+              onClick={scrollPrev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-teal-600 border border-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-sm"
+              aria-label="Previous"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={scrollNext}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-teal-600 border border-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-sm"
+              aria-label="Next"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+
+            {/* Dot indicators */}
+            <div className="absolute bottom-14 right-4 flex gap-1.5">
+              {SLIDES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => emblaApi?.scrollTo(i)}
+                  className="w-1.5 h-1.5 rounded-full bg-white/50 hover:bg-white transition-colors"
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Decorative badge */}
+            <div className="absolute top-4 right-4 bg-teal-600/90 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-teal-400/30">
+              HMA Campus
+            </div>
+          </div>
+
+          {/* Tagline below slider */}
+          <p className="text-white/40 text-xs text-center mt-4 font-medium tracking-wide">
+            Where every child discovers their potential
+          </p>
         </motion.div>
       </div>
 
