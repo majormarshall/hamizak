@@ -7,7 +7,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, BookOpen, Users, Star, Image as GalleryIcon, MessageSquare,
   ClipboardList, Calendar, Mail, Settings, LogOut,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -30,6 +30,7 @@ export default function AdminSidebar() {
   const path = usePathname()
   const supabase = createClient()
   const [collapsed, setCollapsed] = useState(false)
+  const [portalsOpen, setPortalsOpen] = useState(false)
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -122,6 +123,70 @@ export default function AdminSidebar() {
             </div>
           )
         })}
+
+        {/* Portals Section */}
+        <div className="space-y-0.5">
+          {!collapsed && (
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30 px-2 mb-2">
+              External Portals
+            </p>
+          )}
+          
+          <button
+            onClick={() => {
+              if (collapsed) {
+                setCollapsed(false)
+                setPortalsOpen(true)
+              } else {
+                setPortalsOpen(!portalsOpen)
+              }
+            }}
+            className={`
+              relative flex items-center w-full ${collapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl
+              text-[13px] font-medium transition-all duration-200 group text-white/55 hover:text-white hover:bg-white/5
+            `}
+          >
+            <Globe size={16} className="shrink-0 transition-transform duration-200 group-hover:scale-110" />
+            {!collapsed && (
+              <>
+                <span className="flex-1 text-left truncate">School Portals</span>
+                {portalsOpen ? <ChevronUp size={14} className="text-white/40" /> : <ChevronDown size={14} className="text-white/40" />}
+              </>
+            )}
+          </button>
+
+          {!collapsed && portalsOpen && (
+            <div className="mt-1 pl-4 space-y-1 border-l border-white/5 ml-4">
+              <a
+                href="https://admin.hamizakma.com.ng"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 py-1.5 px-3 rounded-lg text-xs font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                Admin Portal
+              </a>
+              <a
+                href="https://staff.hamizakma.com.ng"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 py-1.5 px-3 rounded-lg text-xs font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                Staff Portal
+              </a>
+              <a
+                href="https://hamizakma.com.ng"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 py-1.5 px-3 rounded-lg text-xs font-medium text-white/50 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                Student Portal
+              </a>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Logout */}
