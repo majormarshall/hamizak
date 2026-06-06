@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { SiteSettings } from '@/types'
 
@@ -19,6 +19,7 @@ const NAV_LINKS = [
 export default function Navbar({ settings }: { settings: SiteSettings | null }) {
   const [open, setOpen]       = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [desktopPortalsOpen, setDesktopPortalsOpen] = useState(false)
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20)
@@ -66,6 +67,52 @@ export default function Navbar({ settings }: { settings: SiteSettings | null }) 
               </Link>
             </li>
           ))}
+          <li 
+            className="relative"
+            onMouseEnter={() => setDesktopPortalsOpen(true)}
+            onMouseLeave={() => setDesktopPortalsOpen(false)}
+          >
+            <button
+              className="flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-teal-600 hover:bg-teal-50 px-3.5 py-2 rounded-xl transition-all"
+            >
+              <span>Portals</span>
+              <ChevronDown className="w-4 h-4 text-slate-400 transition-colors" />
+            </button>
+            
+            {desktopPortalsOpen && (
+              <div 
+                className="absolute right-0 mt-1 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50"
+              >
+                <a
+                  href="https://admin.hamizakma.com.ng"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-teal-600 hover:bg-teal-50 transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-red-400" />
+                  Admin Portal
+                </a>
+                <a
+                  href="https://staff.hamizakma.com.ng"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-teal-600 hover:bg-teal-50 transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-blue-400" />
+                  Staff Portal
+                </a>
+                <a
+                  href="https://hamizakma.com.ng"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-teal-600 hover:bg-teal-50 transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-green-400" />
+                  Student Portal
+                </a>
+              </div>
+            )}
+          </li>
         </ul>
 
         {/* CTA + Hamburger */}
@@ -105,6 +152,41 @@ export default function Navbar({ settings }: { settings: SiteSettings | null }) 
                   </Link>
                 </li>
               ))}
+              <li className="border-t border-slate-50 pt-2 mt-2">
+                <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Portals</p>
+                <div className="flex flex-col gap-1">
+                  <a
+                    href="https://admin.hamizakma.com.ng"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 text-sm font-semibold text-slate-700 hover:text-teal-600 hover:bg-teal-50 px-3 py-2.5 rounded-xl transition"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-red-400" />
+                    Admin Portal
+                  </a>
+                  <a
+                    href="https://staff.hamizakma.com.ng"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 text-sm font-semibold text-slate-700 hover:text-teal-600 hover:bg-teal-50 px-3 py-2.5 rounded-xl transition"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    Staff Portal
+                  </a>
+                  <a
+                    href="https://hamizakma.com.ng"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 text-sm font-semibold text-slate-700 hover:text-teal-600 hover:bg-teal-50 px-3 py-2.5 rounded-xl transition"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-green-400" />
+                    Student Portal
+                  </a>
+                </div>
+              </li>
               <li className="pt-2">
                 <Link href="/admission" onClick={() => setOpen(false)} className="btn-primary w-full text-center block py-3">
                   Apply Now
