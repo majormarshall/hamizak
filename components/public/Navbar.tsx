@@ -52,7 +52,7 @@ export default function Navbar({ settings }: { settings: SiteSettings | null }) 
   const [open, setOpen]               = useState(false)
   const [scrolled, setScrolled]       = useState(false)
   const [portalsOpen, setPortalsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLLIElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20)
@@ -120,7 +120,7 @@ export default function Navbar({ settings }: { settings: SiteSettings | null }) 
           </Link>
 
           {/* ── Beautiful Portals Dropdown ── */}
-          <div className="hidden lg:block relative" ref={dropdownRef as React.RefObject<HTMLDivElement>}>
+          <div className="hidden lg:block relative" ref={dropdownRef}>
             <button
               onClick={() => setPortalsOpen(v => !v)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all duration-200 shadow-sm border
