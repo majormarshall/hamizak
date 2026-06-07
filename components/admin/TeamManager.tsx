@@ -13,19 +13,18 @@ const EMPTY: Partial<StaffMember> = {
   name: '', role: '', bio: '', photo_url: '', is_active: true
 }
 
-/** Upload via server-side API route (uses service role — bypasses RLS) */
+/** Upload via server-side API route (uses service role — bypasses RLS, auto-creates bucket) */
 async function uploadViaApi(file: File): Promise<string> {
   const form = new FormData()
   form.append('file', file)
   form.append('bucket', 'media')
   form.append('folder', 'team')
   const res = await fetch('/api/upload', { method: 'POST', body: form })
+  const json = await res.json().catch(() => ({ error: 'Unknown upload error' }))
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Unknown upload error' }))
-    throw new Error(err.error ?? 'Upload failed')
+    throw new Error(json.error ?? `Upload failed (${res.status})`)
   }
-  const { url } = await res.json()
-  return url
+  return json.url
 }
 
 export default function TeamManager({ initial }: Props) {
@@ -51,9 +50,10 @@ export default function TeamManager({ initial }: Props) {
           data.photo_url = await uploadViaApi(photoFile)
           setUploadPct(80)
         } catch (uploadErr) {
-          console.error('Photo upload failed:', uploadErr)
-          toast.error('Photo upload failed — saving without photo.')
-          // Continue saving without photo rather than blocking the whole save
+          const msg = uploadErr instanceof Error ? uploadErr.message : 'Unknown error'
+          console.error('Photo upload failed:', msg)
+          toast.error(`Photo upload failed: ${msg}`)
+          // Still continue saving the staff member without photo
         }
       }
 
