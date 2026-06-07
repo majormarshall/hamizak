@@ -254,6 +254,26 @@ export async function generateAdmissionNumber(id: string): Promise<string> {
   return admissionNumber
 }
 
+export async function updateAdmissionNumber(id: string, admissionNumber: string) {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('admission_applications')
+    .update({ admission_number: admissionNumber.trim() })
+    .eq('id', id)
+  if (error) throw error
+  revalidatePath('/admin/admissions')
+}
+
+export async function deleteAllApplications() {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('admission_applications')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000') // delete all rows
+  if (error) throw error
+  revalidatePath('/admin/admissions')
+}
+
 export async function deleteApplication(id: string) {
   const supabase = createAdminClient()
   await supabase.from('admission_applications').delete().eq('id', id)
