@@ -57,7 +57,7 @@ export default async function AboutPage() {
             <h2 className="font-heading font-black text-3xl text-slate-900 mb-4 tracking-tight">Our Mission</h2>
             <p className="text-slate-500 font-medium leading-relaxed text-lg">
               To provide an authentic Montessori education that nurtures each child&apos;s natural desire
-              to learn, develop independence, and build a strong moral foundation — preparing them
+              to learn, develop independence, and build a strong moral foundationpreparing them
               to thrive in an ever-changing world.
             </p>
           </div>
@@ -66,7 +66,7 @@ export default async function AboutPage() {
             <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-8 text-2xl group-hover:scale-110 transition-transform duration-500">🌟</div>
             <h2 className="font-heading font-black text-3xl text-white mb-4 tracking-tight">Our Vision</h2>
             <p className="text-white/60 font-medium leading-relaxed text-lg">
-              To be Abuja&apos;s leading Montessori institution — a school where children from all
+              To be Abuja&apos;s leading Montessori institutiona school where children from all
               backgrounds discover their unique potential, families feel welcomed as partners,
               and educators are empowered to inspire lifelong learners.
             </p>
@@ -82,7 +82,7 @@ export default async function AboutPage() {
               Dr Mariyam Bello discovered that children learn best when they are free to explore
               at their own pace within a carefully prepared environment. At Hamizak, we honour this
               philosophy by providing rich learning materials, multi-age classrooms, and trained
-              guides who observe and support — rather than direct — each child&apos;s journey.
+              guides who observe and support rather than direct each child&apos;s journey.
             </p>
             <p>
               We believe that education is a natural process that develops spontaneously in the human
