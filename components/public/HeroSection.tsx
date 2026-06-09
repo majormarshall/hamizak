@@ -10,12 +10,12 @@ import type { SiteSettings } from '@/types'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  show:   { opacity: 1, y: 0 },
+  show: { opacity: 1, y: 0 },
 }
 
 const stagger = {
   hidden: {},
-  show:   { transition: { staggerChildren: 0.12 } },
+  show: { transition: { staggerChildren: 0.12 } },
 }
 
 // School photo slides — swap in real URLs as you upload them to Supabase
@@ -41,7 +41,7 @@ interface Props { settings: SiteSettings | null }
 
 export default function HeroSection({ settings }: Props) {
   const headline = settings?.hero_headline ?? "Nurturing Independent Learners for a Bright Future"
-  const subtitle  = settings?.hero_subtitle  ?? "Welcome to Hamizak Montessori Academy — Where Every Child Blooms"
+  const subtitle = settings?.hero_subtitle ?? "Welcome to Hamizak Montessori Academy  Where Every Child Blooms"
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
 
@@ -234,7 +234,7 @@ export default function HeroSection({ settings }: Props) {
       {/* Wave bottom */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-12 lg:h-20">
-          <path d="M0 80C240 26.6667 480 0 720 0C960 0 1200 26.6667 1440 80H0Z" fill="white"/>
+          <path d="M0 80C240 26.6667 480 0 720 0C960 0 1200 26.6667 1440 80H0Z" fill="white" />
         </svg>
       </div>
     </section>
