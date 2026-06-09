@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Nunito, Open_Sans } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
+import SchoolJsonLd from '@/components/SchoolJsonLd'
 import './globals.css'
 
 const nunito = Nunito({
@@ -16,17 +17,50 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://hamizak.com'), // Replace with actual domain if known
-  title: 'Hamizak Montessori Academy | Abuja, Nigeria',
+  metadataBase: new URL('https://hamizak.com.ng'),
+  title: {
+    default: 'Hamizak Montessori Academy | Abuja, Nigeria',
+    template: '%s | Hamizak Montessori Academy',
+  },
   description:
     'Hamizak Montessori Academy — Discipline, Integrity & Excellence. Nurturing independent learners from Creche to High School in Sabon Lugbe, Airport Road, Abuja. Call 08032253811.',
-  keywords: ['montessori', 'school', 'abuja', 'nursery', 'primary', 'HMA', 'hamizak', 'nigeria', 'sabon lugbe'],
+  keywords: [
+    'Hamizak Montessori Academy',
+    'montessori school abuja',
+    'nursery school abuja',
+    'primary school abuja',
+    'airport road school abuja',
+    'sabon lugbe school',
+    'best school in abuja',
+    'HMA abuja',
+    'private school nigeria',
+    'early childhood education abuja',
+    'creche abuja',
+    'hamizak',
+  ],
+  authors: [{ name: 'Hamizak Montessori Academy' }],
+  creator: 'Hamizak Montessori Academy',
+  publisher: 'Hamizak Montessori Academy',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   icons: { icon: '/images/hma-logo.jpg', apple: '/images/hma-logo.jpg' },
   openGraph: {
-    title: 'Hamizak Montessori Academy | Abuja',
-    description: 'Discipline, Integrity & Excellence — Where every child blooms',
+    title: 'Hamizak Montessori Academy | Abuja, Nigeria',
+    description: 'Discipline, Integrity & Excellence — Where every child blooms. Nurturing independent learners from Creche to High School in Sabon Lugbe, Abuja.',
     type: 'website',
-    images: [{ url: '/images/school-building-main.jpg', width: 1200, height: 630 }],
+    url: 'https://hamizak.com.ng',
+    siteName: 'Hamizak Montessori Academy',
+    locale: 'en_NG',
+    images: [{ url: '/images/school-building-main.jpg', width: 1200, height: 630, alt: 'Hamizak Montessori Academy Campus' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Hamizak Montessori Academy | Abuja, Nigeria',
+    description: 'Discipline, Integrity & Excellence — Where every child blooms.',
+    images: ['/images/school-building-main.jpg'],
   },
 }
 
@@ -34,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${nunito.variable} ${openSans.variable}`}>
       <body className="font-body antialiased bg-white text-gray-900">
+        <SchoolJsonLd />
         {children}
         <Toaster
           position="top-right"

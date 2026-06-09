@@ -2,7 +2,16 @@ import ContactSection from '@/components/public/ContactSection'
 import { getSiteSettings } from '@/lib/actions'
 import Image from 'next/image'
 
-export const metadata = { title: 'Contact Us | Hamizak Montessori Academy' }
+export const metadata = {
+  title: 'Contact Us',
+  description: 'Contact Hamizak Montessori Academy in Sabon Lugbe, Airport Road, Abuja. Call 08032253811 or send us a message. Schedule a campus tour today.',
+  keywords: ['contact hamizak', 'montessori school abuja contact', 'sabon lugbe school phone number', 'hamizak montessori phone'],
+  openGraph: {
+    title: 'Contact Hamizak Montessori Academy | Abuja',
+    description: 'Get in touch with us at Sabon Lugbe, Airport Road, Abuja. Call 08032253811 to schedule a visit.',
+    url: 'https://hamizak.com.ng/contact',
+  },
+}
 
 export default async function ContactPage() {
   const settings = await getSiteSettings()

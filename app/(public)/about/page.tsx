@@ -2,7 +2,16 @@ import { getStaff, getCoreValues } from '@/lib/actions'
 import Image from 'next/image'
 import type { StaffMember, CoreValue } from '@/types'
 
-export const metadata = { title: 'About Us | Hamizak Montessori Academy' }
+export const metadata = {
+  title: 'About Us',
+  description: 'Learn about Hamizak Montessori Academy — our mission, vision, core values, and the passionate educators behind Abuja\'s leading Montessori school in Sabon Lugbe, Airport Road.',
+  keywords: ['about hamizak', 'montessori school history abuja', 'hamizak montessori mission', 'school values abuja'],
+  openGraph: {
+    title: 'About Hamizak Montessori Academy | Abuja, Nigeria',
+    description: 'Our story, mission, values and team. Nurturing children through the Montessori method in Sabon Lugbe, Abuja since our founding.',
+    url: 'https://hamizak.com.ng/about',
+  },
+}
 
 export default async function AboutPage() {
   const [staff, values] = await Promise.all([getStaff(), getCoreValues()])

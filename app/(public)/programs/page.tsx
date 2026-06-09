@@ -4,7 +4,16 @@ import ProgramsSection from '@/components/public/ProgramsSection'
 import WhyChooseSection from '@/components/public/WhyChooseSection'
 import Link from 'next/link'
 
-export const metadata = { title: 'Programs | Hamizak Montessori Academy' }
+export const metadata = {
+  title: 'Our Programs',
+  description: 'Explore Hamizak Montessori Academy\'s programs — Toddler Community (18mo-3yrs), Children\'s House (3-6yrs), and Elementary (6-12yrs). Authentic Montessori education in Abuja, Nigeria.',
+  keywords: ['montessori programs abuja', 'creche abuja', 'nursery school abuja', 'primary school abuja', 'elementary school abuja', 'toddler programs nigeria'],
+  openGraph: {
+    title: 'Montessori Programs | Hamizak Montessori Academy Abuja',
+    description: 'From Creche to Elementary — our age-specific Montessori programs guide every child through discovery and independent learning.',
+    url: 'https://hamizak.com.ng/programs',
+  },
+}
 
 export default async function ProgramsPage() {
   const [programs, features] = await Promise.all([getPrograms(), getWhyChooseFeatures()])
