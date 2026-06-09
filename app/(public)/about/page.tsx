@@ -19,7 +19,7 @@ export default async function AboutPage() {
   return (
     <div className="bg-white">
       {/* Hero */}
-      <section 
+      <section
         className="py-24 px-4 text-center relative overflow-hidden"
         style={{ background: 'linear-gradient(160deg, #0b2a22 0%, #041510 100%)' }}
       >
@@ -79,7 +79,7 @@ export default async function AboutPage() {
           <h2 className="section-title">The Montessori Approach</h2>
           <div className="prose-content mt-8">
             <p>
-              Dr. Maria Montessori discovered that children learn best when they are free to explore
+              Dr Mariyam Bello discovered that children learn best when they are free to explore
               at their own pace within a carefully prepared environment. At Hamizak, we honour this
               philosophy by providing rich learning materials, multi-age classrooms, and trained
               guides who observe and support — rather than direct — each child&apos;s journey.
