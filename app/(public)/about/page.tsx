@@ -3,13 +3,15 @@ import Image from 'next/image'
 import type { StaffMember, CoreValue } from '@/types'
 
 export const metadata = {
-  title: 'About Us',
+  title: 'About Us — Our Story, Mission & Team',
   description: 'Learn about Hamizak Montessori Academy — our mission, vision, core values, and the passionate educators behind Abuja\'s leading Montessori school in Sabon Lugbe, Airport Road.',
-  keywords: ['about hamizak', 'montessori school history abuja', 'hamizak montessori mission', 'school values abuja'],
+  keywords: ['about hamizak', 'montessori school history abuja', 'hamizak montessori mission', 'school values abuja', 'montessori educators abuja'],
+  alternates: { canonical: 'https://hamizak.com.ng/about' },
   openGraph: {
     title: 'About Hamizak Montessori Academy | Abuja, Nigeria',
     description: 'Our story, mission, values and team. Nurturing children through the Montessori method in Sabon Lugbe, Abuja since our founding.',
     url: 'https://hamizak.com.ng/about',
+    images: [{ url: '/images/school-building-main.jpg', width: 1200, height: 630, alt: 'HMA Campus — Abuja' }],
   },
 }
 

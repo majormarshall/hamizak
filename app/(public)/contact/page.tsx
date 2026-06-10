@@ -3,13 +3,15 @@ import { getSiteSettings } from '@/lib/actions'
 import Image from 'next/image'
 
 export const metadata = {
-  title: 'Contact Us',
-  description: 'Contact Hamizak Montessori Academy in Sabon Lugbe, Airport Road, Abuja. Call 08032253811 or send us a message. Schedule a campus tour today.',
-  keywords: ['contact hamizak', 'montessori school abuja contact', 'sabon lugbe school phone number', 'hamizak montessori phone'],
+  title: 'Contact Us — Visit or Call Hamizak Montessori Academy',
+  description: 'Contact Hamizak Montessori Academy in Sabon Lugbe, Airport Road, Abuja. Call 08032253811 or email us to schedule a campus tour and learn about enrolment.',
+  keywords: ['contact hamizak', 'montessori school abuja contact', 'sabon lugbe school phone number', 'hamizak montessori phone', 'school campus tour abuja'],
+  alternates: { canonical: 'https://hamizak.com.ng/contact' },
   openGraph: {
     title: 'Contact Hamizak Montessori Academy | Abuja',
     description: 'Get in touch with us at Sabon Lugbe, Airport Road, Abuja. Call 08032253811 to schedule a visit.',
     url: 'https://hamizak.com.ng/contact',
+    images: [{ url: '/images/school-building-main.jpg', width: 1200, height: 630, alt: 'HMA Campus — Sabon Lugbe, Abuja' }],
   },
 }
 

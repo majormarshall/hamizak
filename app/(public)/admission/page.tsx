@@ -7,6 +7,10 @@ import toast from 'react-hot-toast'
 import { submitApplication } from '@/lib/actions'
 import Link from 'next/link'
 
+// SEO metadata — note: 'use client' pages can't export metadata directly in Next.js
+// This page's metadata is handled via the parent layout and head tags
+// For full metadata on this page, consider splitting it into a server wrapper + client form component
+
 const STEPS = ['Child Details', 'Parent Info', 'Program & Notes', 'Review']
 const PROGRAMS = ['Toddler Community (18mo – 3yrs)', "Children's House (3 – 6yrs)", 'Elementary (6 – 12yrs)']
 const HOW_HEARD = ['Word of mouth', 'Google search', 'Social media', 'Friend / family', 'Flyer / poster', 'Other']

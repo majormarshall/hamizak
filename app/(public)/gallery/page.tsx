@@ -3,13 +3,15 @@ import Image from 'next/image'
 import GalleryGrid from '@/components/public/GalleryGrid'
 
 export const metadata = {
-  title: 'School Gallery',
-  description: 'View photos from Hamizak Montessori Academy — our campus, classrooms, events, sports, and student activities in Abuja, Nigeria.',
-  keywords: ['hamizak school photos', 'montessori school gallery abuja', 'HMA campus photos'],
+  title: 'School Gallery — Campus Life & Activities',
+  description: 'View photos from Hamizak Montessori Academy — our campus, classrooms, events, sports, Montessori materials, and student activities in Sabon Lugbe, Abuja, Nigeria.',
+  keywords: ['hamizak school photos', 'montessori school gallery abuja', 'HMA campus photos', 'school activities abuja', 'montessori classroom photos'],
+  alternates: { canonical: 'https://hamizak.com.ng/gallery' },
   openGraph: {
     title: 'Gallery | Hamizak Montessori Academy Abuja',
     description: 'A window into life at HMA — vibrant classrooms, events, and a joyful community of learners.',
     url: 'https://hamizak.com.ng/gallery',
+    images: [{ url: '/images/music-violin.jpg', width: 1200, height: 630, alt: 'Student activities at HMA Abuja' }],
   },
 }
 
