@@ -103,6 +103,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             success: { iconTheme: { primary: '#2D6A4F', secondary: '#fff' } },
           }}
         />
+
+        {/* Powered by Dev Spirit Footer */}
+        <footer style={{
+          textAlign: 'center',
+          padding: '1rem',
+          borderTop: '1px solid #e5e7eb',
+          fontSize: '0.78rem',
+          color: '#9ca3af',
+          letterSpacing: '0.04em',
+          fontFamily: 'var(--font-body)',
+        }}>
+          <span style={{ opacity: 0.8 }}>Powered by</span>{' '}
+          <strong style={{
+            background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: 800,
+            letterSpacing: '0.02em',
+          }}>Dev Spirit</strong>
+        </footer>
       </body>
     </html>
   )
