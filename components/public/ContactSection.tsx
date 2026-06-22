@@ -71,17 +71,29 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
               ))}
             </div>
 
-            {/* Map placeholder */}
-            <div className="w-full h-64 rounded-[2rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-teal-500/5 flex flex-col items-center justify-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-                  <MapPin className="w-8 h-8 text-teal-500" />
-                </div>
-                <div className="text-center px-6">
-                  <p className="text-slate-900 font-black tracking-tight text-lg">Airport Road, Abuja</p>
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Visit Our Campus</p>
-                </div>
-              </div>
+            {/* Google Maps Embed */}
+            <div className="w-full h-72 rounded-[2rem] overflow-hidden border border-slate-100 shadow-xl shadow-slate-200/40 relative group">
+              <iframe
+                title="Hamizak Montessori Academy Location"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.4!2d7.2631!3d9.0082!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104e0d4b3c4a1111%3A0x0!2sSabon+Lugbe%2C+Airport+Road%2C+Abuja%2C+Nigeria!5e0!3m2!1sen!2sng!4v1700000000000!5m2!1sen!2sng&q=Sabon+Lugbe+AMAC+Estate+Airport+Road+Abuja+Nigeria"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+              />
+              {/* Overlay link to open full Google Maps */}
+              <a
+                href="https://www.google.com/maps/search/Sabon+Lugbe+AMAC+Estate+Airport+Road+Abuja+Nigeria"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm text-teal-700 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg border border-teal-100 hover:bg-teal-600 hover:text-white transition-all duration-300 flex items-center gap-2"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                Open in Maps
+              </a>
             </div>
           </motion.div>
 
