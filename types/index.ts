@@ -11,6 +11,7 @@ export interface SiteSettings {
   instagram_url: string
   twitter_url: string
   youtube_url: string
+  tiktok_url: string
   google_maps_embed: string
   logo_url: string
   favicon_url: string

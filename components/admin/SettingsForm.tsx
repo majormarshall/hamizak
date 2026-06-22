@@ -164,10 +164,11 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
           </Section>
 
           <Section title="Social Media">
-            <Field label="Facebook URL"  field="facebook_url" />
-            <Field label="Instagram URL" field="instagram_url" />
+            <Field label="Facebook URL"    field="facebook_url" />
+            <Field label="Instagram URL"   field="instagram_url" />
             <Field label="Twitter / X URL" field="twitter_url" />
-            <Field label="YouTube URL"   field="youtube_url" />
+            <Field label="YouTube URL"     field="youtube_url" />
+            <Field label="TikTok URL"      field="tiktok_url" placeholder="https://www.tiktok.com/@yourhandle" />
           </Section>
         </div>
 
