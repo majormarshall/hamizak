@@ -10,6 +10,7 @@ import type { SiteSettings } from '@/types'
 const NAV_LINKS = [
   { label: 'Home',      href: '/' },
   { label: 'About Us',  href: '/about' },
+  { label: 'Board',     href: '/board' },
   { label: 'Programs',  href: '/programs' },
   { label: 'Admission', href: '/admission' },
   { label: 'Gallery',   href: '/gallery' },
