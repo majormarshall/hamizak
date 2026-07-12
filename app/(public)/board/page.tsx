@@ -1,4 +1,8 @@
 import Image from 'next/image'
+import { getBoardPhotos } from '@/lib/actions'
+
+// Revalidate every 60 s so a newly uploaded photo appears quickly
+export const revalidate = 60
 
 export const metadata = {
   title: 'Meet the Board of Directors — Hamizak Montessori Academy',
@@ -60,6 +64,7 @@ A lover of travel, reading, music, fitness and sports, she organizes a yearly vo
 const DIRECTORS = [
   {
     id: 1,
+    slug: 'alh-bello',
     name: 'Alhaji Abdul Hakeem D. Bello',
     title: 'DIRECTOR OF FINANCE AND ACCOUNT',
     image: '/images/board/alh-bello.jpg',
@@ -75,6 +80,7 @@ He serves as Deputy Director Procurement and Head Procurement at Hamizak Montess
   },
   {
     id: 2,
+    slug: 'hajia-habeebah',
     name: 'Hajia Habeebah Mu\'azu',
     title: 'DIRECTOR OF ADMINISTRATION',
     image: '/images/board/hajia-habeebah.jpg',
@@ -84,6 +90,7 @@ She is a Certified Chartered Chief Procurement Officer, an interior decorator, a
   },
   {
     id: 3,
+    slug: 'amina-ladidi',
     name: 'Mrs. Amina Ladidi Suleiman',
     title: 'DIRECTOR',
     image: '/images/board/amina-ladidi.jpg',
@@ -99,6 +106,7 @@ Key Achievements: Appointed ECOWAS Small Business Coalition (ESBC) Ambassador fo
   },
   {
     id: 4,
+    slug: 'zainab-okunola',
     name: 'Mrs. Zainab Balaraba Okunola',
     title: 'DIRECTOR',
     image: '/images/board/zainab-okunola.jpg',
@@ -168,7 +176,15 @@ function Initials({ name, size = 'md' }: { name: string; size?: 'lg' | 'md' }) {
 /* ─────────────────────────────────────────────
    Page
 ───────────────────────────────────────────── */
-export default function BoardPage() {
+export default async function BoardPage() {
+  // Fetch Supabase-hosted URLs; falls back to {} if table is empty / not yet created
+  const supabasePhotos = await getBoardPhotos()
+
+  // Helper: returns Supabase URL if available, else local static file
+  function photoUrl(slug: string, localPath: string) {
+    return supabasePhotos[slug] ?? localPath
+  }
+
   return (
     <div className="bg-white">
       {/* ── Hero ── */}
@@ -238,7 +254,7 @@ export default function BoardPage() {
                   <div className="relative">
                     <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-[2rem] overflow-hidden ring-4 ring-amber-400/40 shadow-2xl shadow-black/40 relative">
                       <Image
-                        src={CHAIR.image}
+                        src={photoUrl('dr-maryam', CHAIR.image)}
                         alt={CHAIR.name}
                         fill
                         sizes="(max-width: 640px) 224px, 288px"
@@ -360,7 +376,7 @@ export default function BoardPage() {
                     <div className="relative z-10">
                       <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-[1.75rem] overflow-hidden ring-4 ring-white/20 shadow-2xl group-hover:ring-amber-400/30 transition-all duration-500">
                         <Image
-                          src={director.image}
+                          src={photoUrl(director.slug, director.image)}
                           alt={director.name}
                           fill
                           sizes="(max-width: 640px) 176px, 208px"

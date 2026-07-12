@@ -7,7 +7,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, BookOpen, Users, Star, Image as GalleryIcon, MessageSquare,
   ClipboardList, Calendar, Mail, Settings, LogOut,
-  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, ChevronUp,
+  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, ChevronUp, ShieldCheck,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -15,6 +15,7 @@ const NAV = [
   { href: '/admin',              icon: LayoutDashboard, label: 'Overview',      exact: true,  section: 'Overview' },
   { href: '/admin/programs',     icon: BookOpen,        label: 'Programs',                    section: 'Content' },
   { href: '/admin/team',         icon: Users,           label: 'Team',                        section: 'Content' },
+  { href: '/admin/board',        icon: ShieldCheck,     label: 'Board Photos',                section: 'Content' },
   { href: '/admin/testimonials', icon: Star,            label: 'Testimonials',                section: 'Content' },
   { href: '/admin/gallery',      icon: GalleryIcon,     label: 'Gallery',                     section: 'Content' },
   { href: '/admin/events',       icon: Calendar,        label: 'Events & News',               section: 'Content' },

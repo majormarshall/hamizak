@@ -345,3 +345,22 @@ export async function removeAdmin(email: string) {
   if (error) throw error
   revalidatePath('/admin/settings')
 }
+
+// ─── Board Photos ─────────────────────────────────────────────────
+/**
+ * Returns a map of { slug → supabase_image_url } for board members that
+ * have had their photo uploaded via the admin panel.
+ * Falls back gracefully — if the table doesn't exist or has no rows, returns {}.
+ */
+export async function getBoardPhotos(): Promise<Record<string, string>> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('board_photos')
+      .select('slug, image_url')
+    if (error || !data) return {}
+    return Object.fromEntries(data.map(r => [r.slug, r.image_url]))
+  } catch {
+    return {}
+  }
+}
