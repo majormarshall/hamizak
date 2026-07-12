@@ -346,20 +346,65 @@ export async function removeAdmin(email: string) {
   revalidatePath('/admin/settings')
 }
 
-// ─── Board Photos ─────────────────────────────────────────────────
-/**
- * Returns a map of { slug → supabase_image_url } for board members that
- * have had their photo uploaded via the admin panel.
- * Falls back gracefully — if the table doesn't exist or has no rows, returns {}.
- */
+// ─── Board Members (full CRUD) ────────────────────────────────────
+export interface BoardMember {
+  id: string
+  slug: string
+  name: string
+  board_title: string
+  subtitle: string
+  bio: string
+  is_chair: boolean
+  display_order: number
+  extra_titles: string[]
+  quote: string
+  image_url: string
+  updated_at: string
+}
+
+export async function getBoardMembers(): Promise<BoardMember[]> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('board_members')
+      .select('*')
+      .order('display_order')
+    if (error || !data) return []
+    return data as BoardMember[]
+  } catch {
+    return []
+  }
+}
+
+export async function upsertBoardMember(member: Partial<BoardMember>) {
+  const supabase = createAdminClient()
+  const payload = { ...member, updated_at: new Date().toISOString() }
+  const q = member.id
+    ? supabase.from('board_members').update(payload).eq('id', member.id).select().single()
+    : supabase.from('board_members').insert(payload).select().single()
+  const { data, error } = await q
+  if (error) throw error
+  revalidatePath('/board')
+  revalidatePath('/admin/board')
+  return data as BoardMember
+}
+
+export async function deleteBoardMember(id: string) {
+  const supabase = createAdminClient()
+  await supabase.from('board_members').delete().eq('id', id)
+  revalidatePath('/board')
+  revalidatePath('/admin/board')
+}
+
+// ─── Board Photos (legacy — keep for photo-only uploads) ──────────
 export async function getBoardPhotos(): Promise<Record<string, string>> {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
-      .from('board_photos')
+      .from('board_members')
       .select('slug, image_url')
     if (error || !data) return {}
-    return Object.fromEntries(data.map(r => [r.slug, r.image_url]))
+    return Object.fromEntries(data.map((r: { slug: string; image_url: string }) => [r.slug, r.image_url]))
   } catch {
     return {}
   }

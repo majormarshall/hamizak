@@ -1,11 +1,10 @@
-// Server component — fetches current Supabase photo URLs on every load
-import { getBoardPhotos } from '@/lib/actions'
-import BoardPhotoManager from './BoardPhotoManager'
+// Server component — fetches all board members on every load
+import { getBoardMembers } from '@/lib/actions'
+import BoardManager from './BoardManager'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminBoardPage() {
-  // Map of { slug → supabase_url } for all members that have been uploaded
-  const supabasePhotos = await getBoardPhotos()
-  return <BoardPhotoManager supabasePhotos={supabasePhotos} />
+  const members = await getBoardMembers()
+  return <BoardManager initialMembers={members} />
 }
