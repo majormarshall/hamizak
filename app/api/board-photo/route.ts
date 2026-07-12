@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // ── Validation ─────────────────────────────────────────────
     if (!member || !VALID_SLUGS.has(member)) {
       return NextResponse.json(
-        { error: `Unknown member slug "${member}". Valid: ${[...VALID_SLUGS].join(', ')}` },
+        { error: `Unknown member slug "${member}". Valid: ${Array.from(VALID_SLUGS).join(', ')}` },
         { status: 400 }
       )
     }
