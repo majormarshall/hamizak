@@ -1,17 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, Loader2 } from 'lucide-react'
+import { Plus, X, Loader2, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { upsertEvent, deleteEvent } from '@/lib/actions'
-import { slugify, formatDate } from '@/lib/utils'
+import { slugify, formatDate, uploadImage } from '@/lib/utils'
 import AdminTable from '@/components/admin/AdminTable'
 import type { EventPost } from '@/types'
 
 interface Props { initial: EventPost[] }
 
 const EMPTY: Partial<EventPost> = {
-  title: '', slug: '', content: '', excerpt: '', category: 'news', is_published: false
+  title: '', slug: '', content: '', excerpt: '', category: 'news', is_published: true
 }
 
 export default function EventsManager({ initial }: Props) {
@@ -137,6 +137,37 @@ export default function EventsManager({ initial }: Props) {
                 <div>
                   <label className="form-label">Event Date (if applicable)</label>
                   <input type="date" className="form-input" value={editing.event_date ?? ''} onChange={e => setEditing(p => ({ ...p, event_date: e.target.value }))} />
+                </div>
+              </div>
+              <div>
+                <label className="form-label">Featured Image</label>
+                <div className="flex gap-2">
+                  <input
+                    className="form-input text-xs"
+                    value={editing.featured_image_url ?? ''}
+                    onChange={e => setEditing(p => ({ ...p, featured_image_url: e.target.value }))}
+                    placeholder="Image URL (e.g. /images/... or upload below)"
+                  />
+                  <label className="btn-outline-green flex items-center gap-1.5 cursor-pointer text-xs shrink-0 px-3 py-2 font-semibold">
+                    <Upload className="w-3.5 h-3.5" />
+                    Upload
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        try {
+                          const url = await uploadImage(file, 'gallery', 'news')
+                          setEditing(p => ({ ...p, featured_image_url: url }))
+                          toast.success('Image uploaded!')
+                        } catch {
+                          toast.error('Failed to upload image')
+                        }
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
               <div>

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Save, Upload, Loader2, Users, Trash2, Plus, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
+import { KeyRound } from 'lucide-react'
 import { updateSiteSettings, addAdmin, removeAdmin } from '@/lib/actions'
 import { uploadImage } from '@/lib/utils'
 import type { SiteSettings } from '@/types'
@@ -251,6 +253,32 @@ export default function SettingsForm({ settings, admins, currentUserEmail }: Pro
                 <p className="text-sm text-gray-500 italic">Admin management is restricted to the Super User.</p>
               </div>
             )}
+          </div>
+
+          {/* My Account & Password Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+              <div className="h-7 w-7 rounded-lg bg-teal-50 ring-1 ring-teal-100 flex items-center justify-center">
+                <KeyRound className="w-3.5 h-3.5 text-teal-600" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm">My Account &amp; Password</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Logged in as</p>
+                <p className="text-xs font-semibold text-slate-700 truncate mt-0.5">{currentUserEmail || 'Administrator'}</p>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Need to change your login password? You can update it securely anytime.
+              </p>
+              <Link
+                href="/admin/reset-password"
+                className="btn-outline-green flex items-center justify-center gap-2 w-full text-xs py-2.5 font-semibold"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                Change My Password
+              </Link>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">

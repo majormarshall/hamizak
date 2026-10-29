@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ExternalLink, Bell } from 'lucide-react'
+import { ExternalLink, Bell, KeyRound } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 
 export default function AdminTopbar({ user }: { user: User }) {
@@ -17,6 +17,14 @@ export default function AdminTopbar({ user }: { user: User }) {
       </div>
 
       <div className="flex items-center gap-2">
+        <Link
+          href="/admin/reset-password"
+          className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-600 hover:text-teal-700 transition-colors px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-200/60"
+        >
+          <KeyRound className="w-3.5 h-3.5 text-teal-600" />
+          Change Password
+        </Link>
+
         <Link
           href="/"
           target="_blank"

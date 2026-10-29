@@ -9,7 +9,7 @@ import type {
   WhyChooseFeature, AdmissionStep, ApplicationStatus
 } from '@/types'
 
-// ─── Site Settings ───────────────────────────────────────────────
+// â”€â”€â”€ Site Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   const supabase = await createClient()
   const { data } = await supabase.from('site_settings').select('*').single()
@@ -23,7 +23,7 @@ export async function updateSiteSettings(updates: Partial<SiteSettings>) {
   revalidatePath('/', 'layout')
 }
 
-// ─── Programs ────────────────────────────────────────────────────
+// â”€â”€â”€ Programs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getPrograms(activeOnly = true): Promise<Program[]> {
   const supabase = await createClient()
   let q = supabase.from('programs').select('*').order('display_order')
@@ -52,7 +52,7 @@ export async function deleteProgram(id: string) {
   revalidatePath('/admin/programs')
 }
 
-// ─── Staff Members ───────────────────────────────────────────────
+// â”€â”€â”€ Staff Members â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getStaff(activeOnly = true): Promise<StaffMember[]> {
   const supabase = await createClient()
   let q = supabase.from('staff_members').select('*').order('created_at', { ascending: false })
@@ -81,7 +81,7 @@ export async function deleteStaff(id: string) {
   revalidatePath('/admin/team')
 }
 
-// ─── Testimonials ─────────────────────────────────────────────────
+// â”€â”€â”€ Testimonials â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getTestimonials(approvedOnly = true): Promise<Testimonial[]> {
   const supabase = await createClient()
   let q = supabase.from('testimonials').select('*').order('display_order')
@@ -109,7 +109,7 @@ export async function deleteTestimonial(id: string) {
   revalidatePath('/')
 }
 
-// ─── Gallery ─────────────────────────────────────────────────────
+// â”€â”€â”€ Gallery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
   const supabase = await createClient()
   const { data } = await supabase
@@ -146,8 +146,8 @@ export async function deleteGalleryImage(id: string) {
   revalidatePath('/gallery')
 }
 
-// ─── Events & News ───────────────────────────────────────────────
-export async function getEvents(publishedOnly = true): Promise<EventPost[]> {
+// â”€â”€â”€ Events & News â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+export async function getEvents(publishedOnly = false): Promise<EventPost[]> {
   const supabase = await createClient()
   let q = supabase.from('events_posts').select('*').order('created_at', { ascending: false })
   if (publishedOnly) q = q.eq('is_published', true)
@@ -170,6 +170,7 @@ export async function upsertEvent(post: Partial<EventPost>) {
   const { data, error } = await q
   if (error) throw error
   revalidatePath('/news')
+  revalidatePath('/')
   revalidatePath('/admin/events')
   return data as EventPost
 }
@@ -178,14 +179,47 @@ export async function deleteEvent(id: string) {
   const supabase = createAdminClient()
   await supabase.from('events_posts').delete().eq('id', id)
   revalidatePath('/news')
+  revalidatePath('/')
 }
 
-// ─── Contact Messages ────────────────────────────────────────────
+// â”€â”€â”€ Contact Messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export async function replyToMessage(id: string, to: string, subject: string, body: string) {
+  const nodemailer = await import('nodemailer')
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+
+  await transporter.sendMail({
+    from: `Hamizak Montessori Academy <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; line-height: 1.7; color: #334155;">
+        ${body.replace(/\n/g, '<br/>')}
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #64748b; margin: 0;">
+          Best regards,<br/>
+          <strong>Hamizak Montessori Academy</strong>
+        </p>
+      </div>
+    `,
+  })
+
+  const supabase = createAdminClient()
+  await supabase.from('contact_messages').update({ is_read: true }).eq('id', id)
+  revalidatePath('/admin/messages')
+}
 export async function submitContactMessage(data: Omit<ContactMessage, 'id' | 'is_read' | 'created_at'>) {
   const supabase = await createClient()
   const { error } = await supabase.from('contact_messages').insert({ ...data, is_read: false })
   if (error) {
-    console.error('❌ database insertion error in submitContactMessage:', error)
+    console.error('âŒ database insertion error in submitContactMessage:', error)
     throw error
   }
 }
@@ -208,14 +242,14 @@ export async function deleteMessage(id: string) {
   revalidatePath('/admin/messages')
 }
 
-// ─── Admission Applications ──────────────────────────────────────
+// â”€â”€â”€ Admission Applications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function submitApplication(
   data: Omit<AdmissionApplication, 'id' | 'status' | 'created_at'>
 ) {
   const supabase = await createClient()
   const { error } = await supabase.from('admission_applications').insert({ ...data, status: 'new' })
   if (error) {
-    console.error('❌ database insertion error in submitApplication:', error)
+    console.error('âŒ database insertion error in submitApplication:', error)
     throw error
   }
 }
@@ -280,7 +314,7 @@ export async function deleteApplication(id: string) {
   revalidatePath('/admin/admissions')
 }
 
-// ─── Newsletter ──────────────────────────────────────────────────
+// â”€â”€â”€ Newsletter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function subscribeNewsletter(email: string) {
   const supabase = await createClient()
   const { error } = await supabase
@@ -304,28 +338,28 @@ export async function deleteSubscriber(id: string) {
   revalidatePath('/admin/subscribers')
 }
 
-// ─── Core Values ─────────────────────────────────────────────────
+// â”€â”€â”€ Core Values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getCoreValues(): Promise<CoreValue[]> {
   const supabase = await createClient()
   const { data } = await supabase.from('core_values').select('*').order('display_order')
   return data ?? []
 }
 
-// ─── Why Choose Us ───────────────────────────────────────────────
+// â”€â”€â”€ Why Choose Us â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getWhyChooseFeatures(): Promise<WhyChooseFeature[]> {
   const supabase = await createClient()
   const { data } = await supabase.from('why_choose_us_features').select('*').order('display_order')
   return data ?? []
 }
 
-// ─── Admission Steps ─────────────────────────────────────────────
+// â”€â”€â”€ Admission Steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getAdmissionSteps(): Promise<AdmissionStep[]> {
   const supabase = await createClient()
   const { data } = await supabase.from('admission_steps').select('*').order('step_number')
   return data ?? []
 }
 
-// ─── Admin Management ────────────────────────────────────────────
+// â”€â”€â”€ Admin Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getAdmins(): Promise<{ email: string; role: string }[]> {
   const supabase = await createClient()
   const { data } = await supabase.from('admins').select('*').order('created_at', { ascending: false })
@@ -346,7 +380,7 @@ export async function removeAdmin(email: string) {
   revalidatePath('/admin/settings')
 }
 
-// ─── Board Members (full CRUD) ────────────────────────────────────
+// â”€â”€â”€ Board Members (full CRUD) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface BoardMember {
   id: string
   slug: string
@@ -396,7 +430,7 @@ export async function deleteBoardMember(id: string) {
   revalidatePath('/admin/board')
 }
 
-// ─── Board Photos (legacy — keep for photo-only uploads) ──────────
+// â”€â”€â”€ Board Photos (legacy â€” keep for photo-only uploads) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function getBoardPhotos(): Promise<Record<string, string>> {
   try {
     const supabase = await createClient()

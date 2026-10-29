@@ -7,7 +7,7 @@ import { useState } from 'react'
 import {
   LayoutDashboard, BookOpen, Users, Star, Image as GalleryIcon, MessageSquare,
   ClipboardList, Calendar, Mail, Settings, LogOut,
-  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, ChevronUp, ShieldCheck,
+  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, ChevronUp, ShieldCheck, KeyRound,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -23,6 +23,7 @@ const NAV = [
   { href: '/admin/messages',     icon: MessageSquare,   label: 'Messages',     dot: true,     section: 'Enquiries' },
   { href: '/admin/subscribers',  icon: Mail,            label: 'Subscribers',                 section: 'Enquiries' },
   { href: '/admin/settings',     icon: Settings,        label: 'Settings',                    section: 'System' },
+  { href: '/admin/reset-password', icon: KeyRound,      label: 'Change Password',             section: 'System' },
 ]
 
 const SECTIONS = ['Overview', 'Content', 'Enquiries', 'System']

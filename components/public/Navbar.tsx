@@ -13,8 +13,9 @@ const NAV_LINKS = [
   { label: 'Board',     href: '/board' },
   { label: 'Programs',  href: '/programs' },
   { label: 'Admission', href: '/admission' },
-  { label: 'Gallery',   href: '/gallery' },
-  { label: 'Contact',   href: '/contact' },
+  { label: 'Gallery',       href: '/gallery' },
+  { label: 'Events & News', href: '/news' },
+  { label: 'Contact',       href: '/contact' },
 ]
 
 const PORTALS = [

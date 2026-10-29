@@ -1,130 +1,189 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Lock, Loader2, CheckCircle } from 'lucide-react'
-import Image from 'next/image'
+import { Lock, Loader2, CheckCircle2, KeyRound, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
 
 export default function ResetPasswordPage() {
-  const [password, setPassword]   = useState('')
-  const [confirm, setConfirm]     = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [done, setDone]           = useState(false)
+  const [password, setPassword]     = useState('')
+  const [confirm, setConfirm]       = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm]   = useState(false)
+  const [loading, setLoading]       = useState(false)
+  const [done, setDone]             = useState(false)
+  const [userEmail, setUserEmail]   = useState<string | null>(null)
 
   const supabase = createClient()
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) {
+        setUserEmail(data.user.email)
+      }
+    })
+  }, [supabase])
+
   async function handleReset(e: React.FormEvent) {
     e.preventDefault()
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long')
+      return
+    }
+
     if (password !== confirm) {
       toast.error('Passwords do not match')
       return
     }
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters')
-      return
-    }
+
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
+
     if (error) {
       toast.error(error.message)
     } else {
       setDone(true)
-      setTimeout(() => { window.location.href = '/admin' }, 2500)
+      toast.success('Your password has been changed successfully!')
+      setPassword('')
+      setConfirm('')
     }
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'linear-gradient(160deg, #0b2a22 0%, #041510 100%)' }}
-    >
-      <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-56 h-56 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="max-w-xl mx-auto space-y-6 pb-12">
+      {/* Page Header */}
+      <div>
+        <p className="admin-section-label">Account Security</p>
+        <h1 className="text-xl font-bold text-slate-900">Change Password</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Update the login password for your administrator account.
+        </p>
+      </div>
 
-      <div className="relative w-full max-w-sm">
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl shadow-black/40 overflow-hidden border border-white/10">
-          <div className="h-1 w-full bg-gradient-to-r from-teal-500 via-emerald-400 to-green-500" />
+      {/* Main Card */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8">
+        {userEmail && (
+          <div className="flex items-center gap-3 p-3.5 bg-slate-50 border border-slate-100 rounded-xl mb-6">
+            <div className="h-8 w-8 rounded-lg bg-teal-50 ring-1 ring-teal-100 flex items-center justify-center text-xs font-black text-teal-700 shrink-0">
+              {userEmail.charAt(0).toUpperCase()}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Current Account</p>
+              <p className="text-sm font-semibold text-slate-700 truncate">{userEmail}</p>
+            </div>
+          </div>
+        )}
 
-          <div className="px-8 pt-8 pb-10">
-            <div className="flex flex-col items-center mb-8">
-              <div className="p-1.5 bg-white rounded-2xl shadow-lg ring-1 ring-slate-100 mb-4">
-                <Image
-                  src="/images/hma-logo.jpg"
-                  alt="HMA"
-                  width={72}
-                  height={72}
-                  className="rounded-xl object-contain"
+        {done ? (
+          <div className="text-center py-6 space-y-4">
+            <div className="w-16 h-16 bg-teal-50 border border-teal-100 rounded-2xl flex items-center justify-center mx-auto text-teal-600 shadow-sm">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Password Changed Successfully!</h2>
+              <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
+                Your new password is now active. You can use it the next time you sign in.
+              </p>
+            </div>
+            <div className="pt-2 flex items-center justify-center gap-3">
+              <button
+                onClick={() => setDone(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Change Again
+              </button>
+              <Link
+                href="/admin"
+                className="btn-primary inline-flex items-center gap-2 text-xs font-semibold py-2 px-4"
+              >
+                Go to Dashboard
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleReset} className="space-y-5">
+            <div>
+              <label className="form-label flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-slate-400" />
+                New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Enter min. 6 characters"
+                  className="form-input pr-10 text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
-              <h1 className="font-heading font-black text-2xl text-slate-900 tracking-tight">
-                {done ? 'Password Updated!' : 'Set New Password'}
-              </h1>
-              <p className="text-slate-500 text-sm mt-1">Hamizak Montessori Academy</p>
             </div>
 
-            {done ? (
-              <div className="text-center space-y-4">
-                <CheckCircle className="w-14 h-14 text-teal-500 mx-auto" />
-                <p className="text-slate-600 text-sm">Your password has been updated. Redirecting to admin…</p>
-              </div>
-            ) : (
-              <form onSubmit={handleReset} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">New Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="password"
-                      required
-                      minLength={6}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm
-                                 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent
-                                 placeholder:text-slate-300 text-slate-900 bg-slate-50/50 transition-all"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Min. 6 characters"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="password"
-                      required
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-sm
-                                 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent
-                                 placeholder:text-slate-300 text-slate-900 bg-slate-50/50 transition-all"
-                      value={confirm}
-                      onChange={e => setConfirm(e.target.value)}
-                      placeholder="Repeat password"
-                    />
-                  </div>
-                </div>
-
+            <div>
+              <label className="form-label flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  placeholder="Repeat new password"
+                  className="form-input pr-10 text-sm"
+                />
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl
-                             bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm
-                             transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-teal-900/30
-                             disabled:opacity-60 disabled:translate-y-0"
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  tabIndex={-1}
                 >
-                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {loading ? 'Updating…' : 'Update Password'}
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-              </form>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <p className="text-center text-white/20 text-[10px] mt-6 font-medium tracking-wider">
-          AUTHORIZED PERSONNEL ONLY
-        </p>
+            <div className="p-3 bg-amber-50/70 border border-amber-100 rounded-xl text-xs text-amber-800 space-y-1">
+              <p className="font-semibold text-amber-900">Security Note:</p>
+              <p className="text-[11px] leading-relaxed text-amber-700">
+                Choose a strong, unique password. Do not share your credentials with unauthorized individuals.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full flex items-center justify-center gap-2 py-3"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Updating Password…
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  Update Password
+                </>
+              )}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
