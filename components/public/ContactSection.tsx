@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle, MessageSquare } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { submitContactMessage } from '@/lib/actions'
 import { cleanWhatsAppNumber, generateWhatsAppLink, formatWhatsAppContactMessage } from '@/lib/whatsapp'
@@ -20,38 +20,39 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' })
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [submittedData, setSubmittedData] = useState<typeof form | null>(null)
 
   const schoolWhatsApp = cleanWhatsAppNumber(settings?.whatsapp || '09151556664')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name || !form.email || !form.message) return toast.error('Please fill your name, email and message.')
+    if (!form.name || !form.email || !form.message) {
+      return toast.error('Please fill your name, email and message.')
+    }
+
+    // 1. Prepare WhatsApp deep-link with pre-formatted message
+    const waText = formatWhatsAppContactMessage(form)
+    const waUrl = generateWhatsAppLink(schoolWhatsApp, waText)
+
+    // 2. Open WhatsApp immediately on click (avoids browser popup blocker)
+    try {
+      window.open(waUrl, '_blank')
+    } catch (err) {
+      console.warn('Could not open WhatsApp window:', err)
+    }
+
+    // 3. Save to admin database & trigger backend alerts
     setLoading(true)
     try {
       await submitContactMessage(form)
-      toast.success('Message sent & recorded!')
-      setSubmittedData({ ...form })
+      toast.success('Message sent to admin and WhatsApp!')
       setSubmitted(true)
       setForm({ name: '', email: '', phone: '', subject: '', message: '' })
     } catch {
-      toast.error('Failed to send. Please try again.')
+      toast.error('Failed to record message, but WhatsApp was opened.')
     } finally {
       setLoading(false)
     }
   }
-
-  // Pre-formatted WhatsApp text for submitted message
-  const waSubmittedText = submittedData
-    ? formatWhatsAppContactMessage(submittedData)
-    : ''
-  const waSubmittedUrl = generateWhatsAppLink(schoolWhatsApp, waSubmittedText)
-
-  // Direct general chat link
-  const directWaUrl = generateWhatsAppLink(
-    schoolWhatsApp,
-    'Hello Hamizak Montessori Academy, I would like to make an inquiry.'
-  )
 
   const info = [
     {
@@ -66,10 +67,10 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
     },
     {
       icon: WhatsAppIcon,
-      label: 'WhatsApp (Instant)',
-      value: `${settings?.whatsapp ?? '0915 155 6664'} (Tap to chat)`,
+      label: 'WhatsApp',
+      value: `${settings?.whatsapp ?? '0915 155 6664'}`,
       isLink: true,
-      href: directWaUrl,
+      href: generateWhatsAppLink(schoolWhatsApp, 'Hello Hamizak Montessori Academy, I would like to make an inquiry.'),
       highlight: true,
     },
     {
@@ -188,7 +189,7 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
           </motion.div>
 
           {/* Form Side */}
-          {submitted && submittedData ? (
+          {submitted ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -200,42 +201,22 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
 
               <div className="space-y-2">
                 <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-                  Saved & Logged
+                  Delivered
                 </span>
                 <h3 className="font-heading font-black text-2xl text-slate-900">
                   Message Sent Successfully!
                 </h3>
                 <p className="text-slate-600 text-sm max-w-md mx-auto leading-relaxed">
-                  Thank you, <strong className="text-slate-900">{submittedData.name}</strong>! Your inquiry has been safely saved to our portal.
+                  Thank you! Your message has been safely saved to our admin portal and sent directly to our official WhatsApp line.
                 </p>
-              </div>
-
-              {/* Fast WhatsApp Notification Action */}
-              <div className="w-full p-6 bg-gradient-to-br from-emerald-50/80 to-teal-50/40 rounded-2xl border border-emerald-100 text-left space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
-                  <WhatsAppIcon className="w-5 h-5 text-[#25D366] shrink-0" />
-                  <span>Get an Instant Response on WhatsApp</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  To get the fastest reply right away, you can also forward your message directly to the school administration on WhatsApp:
-                </p>
-                <a
-                  href={waSubmittedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20b858] text-white py-3.5 px-5 rounded-xl font-bold shadow-lg shadow-green-500/20 transition-all hover:scale-[1.02] text-sm"
-                >
-                  <WhatsAppIcon className="w-5 h-5" />
-                  <span>Forward Message to School WhatsApp Now</span>
-                </a>
               </div>
 
               <button
                 type="button"
                 onClick={() => setSubmitted(false)}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors pt-2"
+                className="btn-outline-green !py-2.5 !px-6 text-sm font-semibold rounded-xl"
               >
-                ← Send another message
+                Send Another Message
               </button>
             </motion.div>
           ) : (
@@ -246,24 +227,13 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <div className="flex items-start justify-between flex-wrap gap-2">
-                <div>
-                  <h3 className="font-heading font-black text-2xl text-slate-900 mb-1 tracking-tight">
-                    Send a Message
-                  </h3>
-                  <p className="text-slate-500 text-xs font-medium">
-                    We typically respond within a few hours.
-                  </p>
-                </div>
-                <a
-                  href={directWaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-colors border border-emerald-200"
-                >
-                  <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
-                  <span>Fast WhatsApp Reply</span>
-                </a>
+              <div>
+                <h3 className="font-heading font-black text-2xl text-slate-900 mb-1 tracking-tight">
+                  Send a Message
+                </h3>
+                <p className="text-slate-500 text-xs font-medium">
+                  We typically respond within a few hours.
+                </p>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-5">
@@ -293,7 +263,7 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
               <div className="grid sm:grid-cols-2 gap-5">
                 <div>
                   <label className="form-label">
-                    Phone / WhatsApp <span className="text-emerald-600 font-normal">(Optional)</span>
+                    Phone / WhatsApp <span className="text-slate-400 font-normal">(Optional)</span>
                   </label>
                   <input
                     type="tel"
@@ -326,7 +296,7 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
                 />
               </div>
 
-              <div className="space-y-3 pt-2">
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
@@ -341,24 +311,6 @@ export default function ContactSection({ settings }: { settings: SiteSettings | 
                     </>
                   )}
                 </button>
-
-                <div className="relative flex py-2 items-center">
-                  <div className="flex-grow border-t border-slate-200"></div>
-                  <span className="flex-shrink mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                    Or Chat Directly
-                  </span>
-                  <div className="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <a
-                  href={directWaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20b858] text-white py-3 px-5 rounded-2xl font-bold shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.01] text-sm"
-                >
-                  <WhatsAppIcon className="w-5 h-5" />
-                  <span>Chat with Admissions on WhatsApp</span>
-                </a>
               </div>
             </motion.form>
           )}
