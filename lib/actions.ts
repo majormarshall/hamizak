@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from './supabase/server'
 import { revalidatePath } from 'next/cache'
+import { notifyAdminNewMessage, notifyAdminNewApplication } from './notifications'
 import type {
   SiteSettings, Program, StaffMember, Testimonial,
   GalleryAlbum, GalleryImage, EventPost, ContactMessage,
@@ -135,15 +136,18 @@ export async function upsertAlbum(album: Partial<GalleryAlbum>) {
 
 export async function addGalleryImages(images: Partial<GalleryImage>[]) {
   const supabase = createAdminClient()
-  const { error } = await supabase.from('gallery_images').insert(images)
+  const { data, error } = await supabase.from('gallery_images').insert(images).select()
   if (error) throw error
   revalidatePath('/gallery')
+  revalidatePath('/admin/gallery')
+  return data as GalleryImage[]
 }
 
 export async function deleteGalleryImage(id: string) {
   const supabase = createAdminClient()
   await supabase.from('gallery_images').delete().eq('id', id)
   revalidatePath('/gallery')
+  revalidatePath('/admin/gallery')
 }
 
 // â”€â”€â”€ Events & News â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -215,13 +219,35 @@ export async function replyToMessage(id: string, to: string, subject: string, bo
   await supabase.from('contact_messages').update({ is_read: true }).eq('id', id)
   revalidatePath('/admin/messages')
 }
-export async function submitContactMessage(data: Omit<ContactMessage, 'id' | 'is_read' | 'created_at'>) {
+export async function submitContactMessage(
+  data: Omit<ContactMessage, 'id' | 'is_read' | 'created_at'> & { phone?: string }
+) {
   const supabase = await createClient()
-  const { error } = await supabase.from('contact_messages').insert({ ...data, is_read: false })
+  let finalMessage = data.message
+  if (data.phone && data.phone.trim()) {
+    finalMessage = `[Phone / WhatsApp: ${data.phone.trim()}]\n\n${data.message}`
+  }
+
+  const { error } = await supabase.from('contact_messages').insert({
+    name: data.name,
+    email: data.email,
+    subject: data.subject,
+    message: finalMessage,
+    is_read: false,
+  })
   if (error) {
-    console.error('âŒ database insertion error in submitContactMessage:', error)
+    console.error('database insertion error in submitContactMessage:', error)
     throw error
   }
+
+  // Asynchronously dispatch WhatsApp and Email notifications to school administration
+  notifyAdminNewMessage({
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    subject: data.subject,
+    message: data.message,
+  }).catch(err => console.error('Notification dispatch error:', err))
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
@@ -249,9 +275,18 @@ export async function submitApplication(
   const supabase = await createClient()
   const { error } = await supabase.from('admission_applications').insert({ ...data, status: 'new' })
   if (error) {
-    console.error('âŒ database insertion error in submitApplication:', error)
+    console.error('database insertion error in submitApplication:', error)
     throw error
   }
+
+  // Asynchronously dispatch WhatsApp and Email alerts to school admissions team
+  notifyAdminNewApplication({
+    parent_name: data.parent_name,
+    parent_email: data.parent_email,
+    parent_phone: data.parent_phone,
+    child_name: data.child_name,
+    program_interest: data.program_interest,
+  }).catch(err => console.error('Admission notification dispatch error:', err))
 }
 
 export async function getApplications(): Promise<AdmissionApplication[]> {
@@ -443,3 +478,5 @@ export async function getBoardPhotos(): Promise<Record<string, string>> {
     return {}
   }
 }
+
+

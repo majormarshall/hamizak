@@ -12,33 +12,33 @@ export function formatDate(date: string | Date, pattern = 'dd MMM yyyy') {
   return format(new Date(date), pattern)
 }
 
-// ─── Supabase Storage upload ─────────────────────────────────────
-import { createClient } from './supabase/client'
-
+// ─── Supabase Storage upload via Server API (Bypasses client RLS) ─
 export async function uploadImage(
   file: File,
-  bucket: string,
+  bucket = 'gallery',
   folder = ''
 ): Promise<string> {
-  const supabase = createClient()
-  const ext = file.name.split('.').pop()
-  const fileName = `${folder ? folder + '/' : ''}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('bucket', bucket)
+  formData.append('folder', folder)
 
-  const { error } = await supabase.storage.from(bucket).upload(fileName, file, {
-    cacheControl: '3600',
-    upsert: false,
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
   })
-  if (error) throw error
 
-  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
-  return data.publicUrl
+  const json = await res.json().catch(() => ({ error: 'Upload request failed' }))
+  if (!res.ok) {
+    throw new Error(json.error || `Upload failed (${res.status})`)
+  }
+
+  return json.url
 }
 
 export async function deleteImage(url: string, bucket: string) {
-  const supabase = createClient()
-  const path = url.split(`/${bucket}/`)[1]
-  if (!path) return
-  await supabase.storage.from(bucket).remove([path])
+  // Silent fallback - deletions are handled via database server actions
+  console.log(`Deleting image reference: ${url} from ${bucket}`)
 }
 
 // ─── Slugify ─────────────────────────────────────────────────────

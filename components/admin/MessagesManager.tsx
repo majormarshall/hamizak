@@ -3,12 +3,19 @@
 import { useState } from 'react'
 import { markMessageRead, deleteMessage, replyToMessage } from '@/lib/actions'
 import { formatDate } from '@/lib/utils'
+import { cleanWhatsAppNumber } from '@/lib/whatsapp'
 import type { ContactMessage } from '@/types'
 import AdminTable from '@/components/admin/AdminTable'
 import toast from 'react-hot-toast'
-import { Mail, X, Send, CheckCheck } from 'lucide-react'
+import { Mail, X, Send, CheckCheck, MessageSquare } from 'lucide-react'
 
 interface Props { initial: ContactMessage[] }
+
+function extractPhone(text: string): string | null {
+  if (!text) return null
+  const match = text.match(/\[Phone \/ WhatsApp:\s*([^\]]+)\]/) || text.match(/(?:\+?234|0)[789][01]\d{8}/)
+  return match ? (match[1] || match[0]).trim() : null
+}
 
 export default function MessagesManager({ initial }: Props) {
   const [msgs, setMsgs] = useState<ContactMessage[]>(initial)
@@ -76,17 +83,25 @@ export default function MessagesManager({ initial }: Props) {
     {
       key: 'name',
       label: 'From',
-      render: (m: ContactMessage) => (
-        <div className="flex items-center gap-3">
-          {!m.is_read && (
-            <span className="w-1.5 h-1.5 bg-teal-500 rounded-full shrink-0 shadow-[0_0_6px_rgba(20,184,166,0.5)]" />
-          )}
-          <div>
-            <p className={`leading-tight ${!m.is_read ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>{m.name}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">{m.email}</p>
+      render: (m: ContactMessage) => {
+        const phone = extractPhone(m.message)
+        return (
+          <div className="flex items-center gap-3">
+            {!m.is_read && (
+              <span className="w-1.5 h-1.5 bg-teal-500 rounded-full shrink-0 shadow-[0_0_6px_rgba(20,184,166,0.5)]" />
+            )}
+            <div>
+              <p className={`leading-tight ${!m.is_read ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>{m.name}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">{m.email}</p>
+              {phone && (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded mt-0.5">
+                  <MessageSquare className="w-2.5 h-2.5" /> {phone}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       key: 'subject',
@@ -117,6 +132,8 @@ export default function MessagesManager({ initial }: Props) {
     },
   ]
 
+  const selectedPhone = selected ? extractPhone(selected.message) : null
+
   return (
     <div className="space-y-6">
       <div>
@@ -129,31 +146,46 @@ export default function MessagesManager({ initial }: Props) {
         title="All Messages"
         data={msgs}
         columns={columns}
-        searchKeys={['name', 'email', 'subject']}
+        searchKeys={['name', 'email', 'subject', 'message']}
         emptyMessage="No messages yet. Contact form submissions will appear here."
         onDelete={handleDelete}
-        actions={(m) => (
-          <div className="flex gap-2">
-            <button
-              onClick={() => openMessage(m)}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-semibold transition-colors"
-            >
-              <Mail className="w-3.5 h-3.5" />
-              View & Reply
-            </button>
-            {!m.is_read && (
+        actions={(m) => {
+          const phone = extractPhone(m.message)
+          return (
+            <div className="flex gap-2 items-center">
+              {phone && (
+                <a
+                  href={`https://wa.me/${cleanWhatsAppNumber(phone)}?text=${encodeURIComponent(`Hello ${m.name}, this is Hamizak Montessori Academy following up on your message regarding "${m.subject || 'your enquiry'}".`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Reply via WhatsApp"
+                  className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold transition-colors"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                  WhatsApp
+                </a>
+              )}
               <button
-                onClick={() => handleMarkRead(m.id).then(() =>
-                  toast.success('Marked as read')
-                )}
-                className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 font-semibold transition-colors"
+                onClick={() => openMessage(m)}
+                className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-semibold transition-colors"
               >
-                <CheckCheck className="w-3.5 h-3.5" />
-                Mark Read
+                <Mail className="w-3.5 h-3.5" />
+                View & Reply
               </button>
-            )}
-          </div>
-        )}
+              {!m.is_read && (
+                <button
+                  onClick={() => handleMarkRead(m.id).then(() =>
+                    toast.success('Marked as read')
+                  )}
+                  className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 font-semibold transition-colors"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark Read
+                </button>
+              )}
+            </div>
+          )
+        }}
       />
 
       {/* ── Message Detail + Reply Modal ─────────────────────────────── */}
@@ -171,11 +203,19 @@ export default function MessagesManager({ initial }: Props) {
                   {selected.subject || '(No subject)'}
                 </h2>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-xs text-slate-500 font-medium">{selected.name}</span>
+                  <span className="text-xs text-slate-600 font-bold">{selected.name}</span>
                   <span className="text-slate-300">·</span>
                   <a href={`mailto:${selected.email}`} className="text-xs text-teal-600 hover:underline">
                     {selected.email}
                   </a>
+                  {selectedPhone && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        <MessageSquare className="w-3 h-3 text-[#25D366]" /> {selectedPhone}
+                      </span>
+                    </>
+                  )}
                   <span className="text-slate-300">·</span>
                   <span className="text-xs text-slate-400">{formatDate(selected.created_at)}</span>
                 </div>
@@ -251,7 +291,7 @@ export default function MessagesManager({ initial }: Props) {
                       ) : (
                         <>
                           <Send className="w-3.5 h-3.5" />
-                          Send Reply
+                          Send Email
                         </>
                       )}
                     </button>
@@ -259,19 +299,33 @@ export default function MessagesManager({ initial }: Props) {
                 </div>
               </div>
             ) : (
-              /* Reply Toggle */
-              <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/40 flex items-center justify-between">
+              /* Reply Toggle & Quick Actions */
+              <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/40 flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs text-slate-400">
                   Replying to <strong className="text-slate-600">{selected.email}</strong>
                 </p>
-                <button
-                  onClick={() => setReplyOpen(true)}
-                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white
-                             bg-teal-600 rounded-xl hover:bg-teal-700 transition-colors"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  Reply
-                </button>
+                <div className="flex items-center gap-2">
+                  {selectedPhone && (
+                    <a
+                      href={`https://wa.me/${cleanWhatsAppNumber(selectedPhone)}?text=${encodeURIComponent(`Hello ${selected.name}, this is Hamizak Montessori Academy following up on your message regarding "${selected.subject || 'your enquiry'}".`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white
+                                 bg-[#25D366] hover:bg-[#20b858] rounded-xl transition-colors shadow-sm"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Chat on WhatsApp
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setReplyOpen(true)}
+                    className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white
+                               bg-teal-600 rounded-xl hover:bg-teal-700 transition-colors"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    Reply via Email
+                  </button>
+                </div>
               </div>
             )}
           </div>

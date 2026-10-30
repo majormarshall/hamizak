@@ -26,20 +26,23 @@ export default function GalleryManager({ initial }: Props) {
     try {
       const uploaded: Partial<GalleryImage>[] = []
       for (const file of files) {
-        const url = await uploadImage(file, 'media', `gallery/${activeAlbum.id}`)
-        uploaded.push({ album_id: activeAlbum.id, url, caption: '', display_order: images.length + uploaded.length })
+        const url = await uploadImage(file, 'gallery', 'uploads')
+        const caption = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ')
+        uploaded.push({ album_id: activeAlbum.id, url, caption, display_order: images.length + uploaded.length })
       }
-      await addGalleryImages(uploaded)
+      const saved = await addGalleryImages(uploaded)
       toast.success(`${uploaded.length} photo${uploaded.length > 1 ? 's' : ''} uploaded!`)
-      // Update local state
+      // Update local state with saved records (including database IDs)
+      const newlyAdded = (saved && saved.length > 0) ? saved : (uploaded as GalleryImage[])
       setAlbums(prev => prev.map(a =>
         a.id === activeAlbum.id
-          ? { ...a, images: [...(a.images ?? []), ...uploaded as GalleryImage[]] }
+          ? { ...a, images: [...(a.images ?? []), ...newlyAdded] }
           : a
       ))
-      setActiveAlbum(prev => prev ? { ...prev, images: [...(prev.images ?? []), ...uploaded as GalleryImage[]] } : prev)
-    } catch (err) {
-      toast.error('Upload failed. Please try again.')
+      setActiveAlbum(prev => prev ? { ...prev, images: [...(prev.images ?? []), ...newlyAdded] } : prev)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Upload failed. Please try again.'
+      toast.error(msg)
       console.error(err)
     } finally {
       setUploading(false)
@@ -49,15 +52,20 @@ export default function GalleryManager({ initial }: Props) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.gif'] },
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 10 * 1024 * 1024, // 10MB
   })
 
   async function createAlbum() {
     if (!newAlbumTitle.trim()) return
     setCreatingAlbum(true)
     try {
-      await upsertAlbum({ title: newAlbumTitle, display_order: albums.length, is_active: true })
+      const created = await upsertAlbum({ title: newAlbumTitle, display_order: albums.length + 1, is_active: true })
       toast.success('Album created!')
+      if (created) {
+        const albumWithImages: GalleryAlbum = { ...created, images: [] }
+        setAlbums(prev => [...prev, albumWithImages])
+        setActiveAlbum(albumWithImages)
+      }
       setNewAlbumTitle('')
       setNewAlbumModal(false)
     } catch {
