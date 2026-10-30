@@ -20,7 +20,8 @@ import {
   getGalleryAlbums,
 } from '@/lib/actions'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function HomePage() {
   const [settings, programs, staff, testimonials, values, features, steps, events, albums] = await Promise.all([
