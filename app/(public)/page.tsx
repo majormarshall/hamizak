@@ -17,12 +17,13 @@ import {
   getWhyChooseFeatures,
   getAdmissionSteps,
   getEvents,
+  getGalleryAlbums,
 } from '@/lib/actions'
 
 export const revalidate = 60
 
 export default async function HomePage() {
-  const [settings, programs, staff, testimonials, values, features, steps, events] = await Promise.all([
+  const [settings, programs, staff, testimonials, values, features, steps, events, albums] = await Promise.all([
     getSiteSettings(),
     getPrograms(),
     getStaff(),
@@ -31,11 +32,12 @@ export default async function HomePage() {
     getWhyChooseFeatures(),
     getAdmissionSteps(),
     getEvents(false),
+    getGalleryAlbums(),
   ])
 
   return (
     <>
-      <HeroSection settings={settings} />
+      <HeroSection settings={settings} albums={albums} />
       <ProgramsSection programs={programs} />
       <WhyChooseSection features={features} />
       <CoreValuesSection values={values} />

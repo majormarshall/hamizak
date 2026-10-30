@@ -1,12 +1,12 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Phone, MapPin, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Phone, MapPin, ArrowRight, ChevronLeft, ChevronRight, Images } from 'lucide-react'
 import useEmblaCarousel from 'embla-carousel-react'
-import type { SiteSettings } from '@/types'
+import type { SiteSettings, GalleryAlbum } from '@/types'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -18,40 +18,69 @@ const stagger = {
   show: { transition: { staggerChildren: 0.12 } },
 }
 
-// School photo slides — swap in real URLs as you upload them to Supabase
-const SLIDES = [
+const FALLBACK_SLIDES = [
   {
     src: '/images/school-building-main.jpg',
-    caption: "Our Campus",
-    sub: "Sabon Lugbe, Abuja",
+    caption: 'Our Campus',
+    sub: 'Sabon Lugbe, Abuja',
   },
   {
-    src: '/images/school-building-main.jpg',
-    caption: "Learning Environments",
-    sub: "Thoughtfully designed spaces",
+    src: '/images/school-building-colorful.jpg',
+    caption: 'Learning Environments',
+    sub: 'Thoughtfully designed spaces',
   },
   {
-    src: '/images/school-building-main.jpg',
-    caption: "Montessori in Action",
-    sub: "Child-led discovery every day",
+    src: '/images/montessori-materials.jpg',
+    caption: 'Montessori in Action',
+    sub: 'Child-led discovery every day',
   },
 ]
 
-interface Props { settings: SiteSettings | null }
+interface Props {
+  settings: SiteSettings | null
+  albums?: GalleryAlbum[]
+}
 
-export default function HeroSection({ settings }: Props) {
-  const headline = settings?.hero_headline ?? "Nurturing Independent Learners for a Bright Future"
-  const subtitle = settings?.hero_subtitle ?? "Welcome to Hamizak Montessori Academy  Where Every Child Blooms"
+export default function HeroSection({ settings, albums }: Props) {
+  const headline = settings?.hero_headline ?? 'Nurturing Independent Learners for a Bright Future'
+  const subtitle = settings?.hero_subtitle ?? 'Welcome to Hamizak Montessori Academy — Where Every Child Blooms'
+
+  // Extract all gallery photos across all active albums
+  const allGalleryImages = (albums ?? []).flatMap((album) =>
+    (album.images ?? []).map((img) => ({
+      src: img.url,
+      caption: img.caption || album.title,
+      sub: album.title,
+    }))
+  )
+
+  const slides = allGalleryImages.length > 0 ? allGalleryImages : FALLBACK_SLIDES
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return
+    setSelectedIndex(emblaApi.selectedScrollSnap())
+  }, [emblaApi])
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
 
-  // Auto-play every 4 seconds
+  // Track slide changes
   useEffect(() => {
     if (!emblaApi) return
-    const id = setInterval(() => emblaApi.scrollNext(), 4000)
+    emblaApi.on('select', onSelect)
+    onSelect()
+    return () => {
+      emblaApi.off('select', onSelect)
+    }
+  }, [emblaApi, onSelect])
+
+  // Auto-play every 4.5 seconds
+  useEffect(() => {
+    if (!emblaApi) return
+    const id = setInterval(() => emblaApi.scrollNext(), 4500)
     return () => clearInterval(id)
   }, [emblaApi])
 
@@ -60,7 +89,6 @@ export default function HeroSection({ settings }: Props) {
       className="relative min-h-[92vh] flex items-center overflow-hidden"
       style={{ background: 'linear-gradient(160deg, #0b2a22 0%, #041510 100%)' }}
     >
-
       {/* Background image */}
       <Image
         src={settings?.hero_image_url || '/images/school-building-main.jpg'}
@@ -78,7 +106,6 @@ export default function HeroSection({ settings }: Props) {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-24 grid lg:grid-cols-5 gap-16 items-center">
-
         {/* Text content */}
         <motion.div
           className="lg:col-span-3"
@@ -116,7 +143,7 @@ export default function HeroSection({ settings }: Props) {
               <>
                 Nurturing{' '}
                 <span className="text-teal-400">Independent</span>
-                <br />Learners for a Future
+                <br />Learners for a Bright Future
               </>
             ) : headline}
           </motion.h1>
@@ -139,10 +166,10 @@ export default function HeroSection({ settings }: Props) {
           </motion.div>
 
           <motion.div variants={fadeUp} className="flex flex-wrap gap-6 border-t border-white/5 pt-10">
-            {[settings?.phone1 ?? '08032253811', settings?.phone2 ?? '08062418351'].map((p) => (
+            {[settings?.phone1 ?? '0915 155 6664', settings?.phone2 ?? '0915 155 6664'].filter((v, i, a) => a.indexOf(v) === i).map((p) => (
               <a
                 key={p}
-                href={`tel:${p}`}
+                href={`tel:${p.replace(/\s+/g, '')}`}
                 className="flex items-center gap-2.5 text-white/60 hover:text-white text-sm font-semibold transition-colors group"
               >
                 <div className="p-2 bg-white/5 rounded-lg group-hover:bg-teal-500/20 group-hover:text-teal-400 transition-colors">
@@ -171,7 +198,7 @@ export default function HeroSection({ settings }: Props) {
             {/* Carousel viewport */}
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex">
-                {SLIDES.map((slide, i) => (
+                {slides.map((slide, i) => (
                   <div key={i} className="relative flex-[0_0_100%] aspect-[4/3]">
                     <Image
                       src={slide.src}
@@ -179,11 +206,12 @@ export default function HeroSection({ settings }: Props) {
                       fill
                       className="object-cover"
                       priority={i === 0}
+                      sizes="(max-width: 768px) 100vw, 500px"
                     />
                     {/* Slide caption overlay */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-5 py-4">
-                      <p className="text-white font-bold text-sm leading-tight">{slide.caption}</p>
-                      <p className="text-white/60 text-[11px] font-medium mt-0.5">{slide.sub}</p>
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-5 py-4 pr-24">
+                      <p className="text-white font-bold text-sm leading-tight line-clamp-1">{slide.caption}</p>
+                      <p className="text-teal-300 text-[11px] font-semibold mt-0.5">{slide.sub}</p>
                     </div>
                   </div>
                 ))}
@@ -193,35 +221,37 @@ export default function HeroSection({ settings }: Props) {
             {/* Controls */}
             <button
               onClick={scrollPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-teal-600 border border-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-sm"
-              aria-label="Previous"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-teal-600 border border-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-sm z-10"
+              aria-label="Previous photo"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={scrollNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-teal-600 border border-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-sm"
-              aria-label="Next"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-teal-600 border border-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-sm z-10"
+              aria-label="Next photo"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
 
-            {/* Dot indicators */}
-            <div className="absolute bottom-14 right-4 flex gap-1.5">
-              {SLIDES.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => emblaApi?.scrollTo(i)}
-                  className="w-1.5 h-1.5 rounded-full bg-white/50 hover:bg-white transition-colors"
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
+            {/* Slide counter & pagination */}
+            <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold tracking-wider border border-white/10 shadow-md">
+                {selectedIndex + 1} / {slides.length}
+              </span>
             </div>
 
-            {/* Decorative badge */}
-            <div className="absolute top-4 right-4 bg-teal-600/90 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-teal-400/30">
-              HMA Campus
-            </div>
+            {/* Top link to full Gallery */}
+            <Link
+              href="/gallery"
+              className="absolute top-4 right-4 bg-teal-600/90 hover:bg-teal-500 backdrop-blur-sm text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-teal-400/30 flex items-center gap-1.5 transition-all shadow-lg shadow-teal-900/40 z-10 group"
+            >
+              <Images className="w-3 h-3 group-hover:scale-110 transition-transform" />
+              <span>Gallery</span>
+              <span className="bg-white/20 px-1.5 py-0.2 rounded-full text-[9px] font-bold">
+                {slides.length}
+              </span>
+            </Link>
           </div>
 
           {/* Tagline below slider */}

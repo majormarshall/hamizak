@@ -118,6 +118,14 @@ export async function getGalleryAlbums(): Promise<GalleryAlbum[]> {
     .select('*, images:gallery_images(*)')
     .eq('is_active', true)
     .order('display_order')
+
+  if (data) {
+    data.forEach(album => {
+      if (Array.isArray(album.images)) {
+        album.images.sort((a: GalleryImage, b: GalleryImage) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      }
+    })
+  }
   return data ?? []
 }
 
